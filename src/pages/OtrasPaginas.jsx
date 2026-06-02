@@ -1,29 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { obtenerRegistros } from '../utils/sheets';
-
-const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-  'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
-
-const obtenerMesActual = () => {
-  const now = new Date();
-  const mes = MESES[now.getMonth()];
-  const año = now.getFullYear();
-  return año === 2025 ? mes : `${mes} ${año}`;
-};
+// MEJORADO: usa utilidades compartidas en lugar de duplicar la función obtenerMesActual
+import { obtenerRegistros, obtenerMesActual, MESES } from '../utils/sheets';
 
 export function Gestantes() {
   const navigate = useNavigate();
   const [mesSeleccionado, setMesSeleccionado] = useState(obtenerMesActual);
   const [gestantes, setGestantes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(''); // MEJORADO: estado de error
 
   useEffect(() => {
     setLoading(true);
+    setErrorCarga('');
     obtenerRegistros(mesSeleccionado)
       .then(data => {
         const lista = Array.isArray(data) ? data : [];
         setGestantes(lista.filter(p => p.gestante === 'G' || p.gestante === 'P'));
+      })
+      // MEJORADO: captura error real
+      .catch(err => {
+        setErrorCarga(err.message || 'Error al conectar con el servidor.');
+        setGestantes([]);
       })
       .finally(() => setLoading(false));
   }, [mesSeleccionado]);
@@ -62,6 +60,14 @@ export function Gestantes() {
           <div className="w-5 h-5 border-2 border-rosa-200 border-t-rosa-500 rounded-full animate-spin flex-shrink-0" />
         )}
       </div>
+
+      {/* MEJORADO: banner de error de conexión */}
+      {errorCarga && !loading && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm flex items-center gap-2">
+          <span>⚠️</span>
+          <span>{errorCarga}</span>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">

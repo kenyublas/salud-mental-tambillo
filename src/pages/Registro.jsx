@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CAMPOS_RUA, CIE10 } from '../data/cie10';
-import { crearRegistro } from '../utils/sheets';
+import { crearRegistro, editarRegistro, obtenerRegistros, obtenerMesActual } from '../utils/sheets';
 import BotFlotante from '../components/BotFlotante';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
-
-const MES_HOJA = () => {
-  const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  return meses[new Date().getMonth()] + ' ' + new Date().getFullYear();
-};
 
 // ─── InputField FUERA del componente para evitar re-render y pérdida de foco ───
 function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusquedaCIE, mostrarCIE, setMostrarCIE }) {
@@ -102,8 +97,14 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
 // ─── Componente principal ───────────────────────────────────────────────────
 export default function Registro() {
   const navigate = useNavigate();
+  // MEJORADO: lee parámetros de URL para modo edición
+  const [searchParams] = useSearchParams();
+  const editarId = searchParams.get('editar');   // número de fila en el Sheet
+  const editarMes = searchParams.get('mes');      // nombre de la hoja (ej: "JUNIO 2026")
+  const modoEdicion = Boolean(editarId && editarMes);
+
   const [form, setForm] = useState({
-    fechaAtencion: '',
+    fechaAtencion: new Date().toISOString().split('T')[0],
     profesional: 'Psicología',
     responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
   });
@@ -112,6 +113,36 @@ export default function Registro() {
   const [error, setError] = useState('');
   const [busquedaCIE, setBusquedaCIE] = useState('');
   const [mostrarCIE, setMostrarCIE] = useState(false);
+  // MEJORADO: estado de carga de datos para modo edición
+  const [cargandoDatos, setCargandoDatos] = useState(modoEdicion);
+  const [errorCarga, setErrorCarga] = useState('');
+
+  // MEJORADO: carga los datos del paciente cuando está en modo edición
+  useEffect(() => {
+    if (!modoEdicion) return;
+    setCargandoDatos(true);
+    setErrorCarga('');
+    obtenerRegistros(editarMes)
+      .then(registros => {
+        const paciente = registros.find(r => String(r.id) === String(editarId));
+        if (!paciente) {
+          setErrorCarga('No se encontró el registro. Puede haber sido eliminado.');
+          return;
+        }
+        // MEJORADO: convierte fechas DD/MM/YYYY → YYYY-MM-DD para los campos date del formulario
+        const camposFecha = ['fechaAtencion', 'fechaNacimiento', 'fur', 'fechaProbableParto', 'fechaProxCita'];
+        const formData = { ...paciente };
+        camposFecha.forEach(cf => {
+          if (formData[cf]) {
+            const match = formData[cf].match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (match) formData[cf] = `${match[3]}-${match[2]}-${match[1]}`;
+          }
+        });
+        setForm(formData);
+      })
+      .catch(err => setErrorCarga(err.message || 'Error al cargar el registro.'))
+      .finally(() => setCargandoDatos(false));
+  }, [modoEdicion, editarId, editarMes]);
 
   const esGestante = form.gestante === 'G' || form.gestante === 'P';
   const esMenor = parseInt(form.edad) < 18;
@@ -135,7 +166,8 @@ export default function Registro() {
     });
 
   const handleGuardar = async (datosExtra = {}) => {
-    const payload = { ...form, ...datosExtra, mes: MES_HOJA() };
+    const mesDestino = modoEdicion ? editarMes : obtenerMesActual();
+    const payload = { ...form, ...datosExtra, mes: mesDestino };
     if (!payload.nombres || !payload.dni) {
       setError('Nombres y DNI son obligatorios.');
       return;
@@ -143,20 +175,32 @@ export default function Registro() {
     setGuardando(true);
     setError('');
     try {
-      await crearRegistro(payload);
+      if (modoEdicion) {
+        // MEJORADO: en modo edición llama editarRegistro con el id de fila y el mes correcto
+        await editarRegistro(editarId, payload);
+      } else {
+        await crearRegistro(payload);
+      }
       setGuardado(true);
       setTimeout(() => {
         setGuardado(false);
-        setForm({
-          fechaAtencion: new Date().toISOString().split('T')[0],
-          profesional: 'Psicología',
-          responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
-        });
-      }, 2500);
-    } catch {
-      setError('Error al guardar. Intenta de nuevo.');
+        if (modoEdicion) {
+          // Vuelve a la lista de pacientes tras editar
+          navigate('/pacientes');
+        } else {
+          setForm({
+            fechaAtencion: new Date().toISOString().split('T')[0],
+            profesional: 'Psicología',
+            responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
+          });
+        }
+      }, 2000);
+    } catch (err) {
+      // MEJORADO: muestra el mensaje de error real del servidor
+      setError(err.message || 'Error al guardar. Intenta de nuevo.');
+    } finally {
+      setGuardando(false);
     }
-    setGuardando(false);
   };
 
   const secciones = [
@@ -190,6 +234,34 @@ export default function Registro() {
     },
   ];
 
+  // MEJORADO: pantalla de carga mientras se obtienen datos en modo edición
+  if (cargandoDatos) {
+    return (
+      <div className="px-4 py-5 max-w-3xl mx-auto flex flex-col items-center justify-center min-h-64 gap-4">
+        <div className="w-12 h-12 border-4 border-rosa-200 border-t-rosa-500 rounded-full animate-spin" />
+        <p className="text-sm font-semibold text-rosa-400" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          Cargando datos del registro...
+        </p>
+      </div>
+    );
+  }
+
+  // MEJORADO: pantalla de error si no se encuentra el registro
+  if (errorCarga) {
+    return (
+      <div className="px-4 py-5 max-w-3xl mx-auto">
+        <div className="card text-center py-12">
+          <p className="text-4xl mb-3">⚠️</p>
+          <p className="font-bold text-gray-800 mb-2">No se pudo cargar el registro</p>
+          <p className="text-sm text-gray-500 mb-5">{errorCarga}</p>
+          <button onClick={() => navigate('/pacientes')} className="btn-rosa">
+            Volver a Pacientes
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="px-4 py-5 max-w-3xl mx-auto pb-24"
@@ -204,17 +276,20 @@ export default function Registro() {
           ←
         </button>
         <div>
+          {/* MEJORADO: título dinámico según modo */}
           <h1 className="text-xl font-extrabold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            Nuevo Registro RUA
+            {modoEdicion ? '✏️ Editar Registro RUA' : 'Nuevo Registro RUA'}
           </h1>
-          <p className="text-xs text-gray-400">{MES_HOJA()}</p>
+          <p className="text-xs text-gray-400">
+            {modoEdicion ? `Editando: ${editarMes}` : obtenerMesActual()}
+          </p>
         </div>
       </div>
 
       {/* Alertas */}
       {guardado && (
         <div className="bounce-in bg-green-100 border border-green-300 text-green-800 rounded-xl px-4 py-3 mb-4 flex items-center gap-2 font-semibold text-sm">
-          ✅ Registro guardado correctamente
+          ✅ {modoEdicion ? 'Registro actualizado correctamente' : 'Registro guardado correctamente'}
         </div>
       )}
       {error && (
@@ -286,23 +361,25 @@ export default function Registro() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Guardando...
+              {modoEdicion ? 'Actualizando...' : 'Guardando...'}
             </>
-          ) : '💾 Guardar Registro'}
+          ) : modoEdicion ? '💾 Actualizar Registro' : '💾 Guardar Registro'}
         </button>
       </div>
 
-      {/* Bot flotante */}
-      <BotFlotante
-        activo={activo}
-        pausado={pausado}
-        escuchando={escuchando}
-        procesando={procesando}
-        mensajeBot={mensajeBot}
-        campoActual={campoActual}
-        campo={camposVisibles[campoActual]}
-        onToggle={toggle}
-      />
+      {/* Bot flotante — solo en modo creación */}
+      {!modoEdicion && (
+        <BotFlotante
+          activo={activo}
+          pausado={pausado}
+          escuchando={escuchando}
+          procesando={procesando}
+          mensajeBot={mensajeBot}
+          campoActual={campoActual}
+          campo={camposVisibles[campoActual]}
+          onToggle={toggle}
+        />
+      )}
     </div>
   );
 }

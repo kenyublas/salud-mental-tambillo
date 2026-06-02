@@ -1,17 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { obtenerRegistros, eliminarRegistro } from '../utils/sheets';
+import { obtenerRegistros, eliminarRegistro, obtenerMesActual, MESES } from '../utils/sheets';
 import { descargarPDF, imprimirPDF } from '../utils/pdf';
-
-const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-  'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
-
-const obtenerMesActual = () => {
-  const now = new Date();
-  const mes = MESES[now.getMonth()];
-  const año = now.getFullYear();
-  return año === 2025 ? mes : `${mes} ${año}`;
-};
 
 function Seccion({ titulo, campos }) {
   const visibles = campos.filter(([, v]) => v);
@@ -33,14 +23,18 @@ function Seccion({ titulo, campos }) {
 
 export default function Pacientes() {
   const navigate = useNavigate();
+  // MEJORADO: usa obtenerMesActual importada en lugar de duplicar la función
   const [mesSeleccionado, setMesSeleccionado] = useState(obtenerMesActual);
   const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(''); // MEJORADO: estado de error de fetch
   const [busqueda, setBusqueda] = useState('');
   const [filtroSexo, setFiltroSexo] = useState('');
   const [filtroSector, setFiltroSector] = useState('');
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
   const [confirmEliminar, setConfirmEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false); // MEJORADO: loading state en eliminación
+  const [errorEliminar, setErrorEliminar] = useState(''); // MEJORADO: error state en eliminación
   const detalleRef = useRef(null);
 
   // Scroll automático al panel de detalle en móvil
@@ -54,9 +48,15 @@ export default function Pacientes() {
 
   useEffect(() => {
     setLoading(true);
+    setErrorCarga('');
     setPacienteSeleccionado(null);
     obtenerRegistros(mesSeleccionado)
       .then(d => setDatos(Array.isArray(d) ? d : []))
+      // MEJORADO: captura error real en lugar de silenciarlo
+      .catch(err => {
+        setErrorCarga(err.message || 'Error al conectar con el servidor.');
+        setDatos([]);
+      })
       .finally(() => setLoading(false));
   }, [mesSeleccionado]);
 
@@ -70,11 +70,21 @@ export default function Pacientes() {
 
   const sectores = [...new Set(datos.map(d => d.sector).filter(Boolean))];
 
+  // MEJORADO: pasa mesSeleccionado al eliminar (antes siempre usaba el mes actual del servidor)
+  // MEJORADO: loading state y manejo de error
   const eliminar = async (id) => {
-    await eliminarRegistro(id);
-    setDatos(d => d.filter(p => p.id !== id));
-    setConfirmEliminar(null);
-    if (pacienteSeleccionado?.id === id) setPacienteSeleccionado(null);
+    setEliminando(true);
+    setErrorEliminar('');
+    try {
+      await eliminarRegistro(id, mesSeleccionado);
+      setDatos(d => d.filter(p => p.id !== id));
+      setConfirmEliminar(null);
+      if (pacienteSeleccionado?.id === id) setPacienteSeleccionado(null);
+    } catch (err) {
+      setErrorEliminar(err.message || 'Error al eliminar. Intenta de nuevo.');
+    } finally {
+      setEliminando(false);
+    }
   };
 
   return (
@@ -118,6 +128,30 @@ export default function Pacientes() {
         )}
       </div>
 
+      {/* MEJORADO: banner de error de conexión visible para el usuario */}
+      {errorCarga && !loading && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 flex items-center gap-2 text-sm">
+          <span className="text-lg">⚠️</span>
+          <div>
+            <p className="font-semibold">No se pudieron cargar los registros</p>
+            <p className="text-xs mt-0.5">{errorCarga}</p>
+          </div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setErrorCarga('');
+              obtenerRegistros(mesSeleccionado)
+                .then(d => setDatos(Array.isArray(d) ? d : []))
+                .catch(err => setErrorCarga(err.message || 'Error al conectar.'))
+                .finally(() => setLoading(false));
+            }}
+            className="ml-auto text-xs bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg font-semibold transition-colors flex-shrink-0"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* Filtros de búsqueda */}
       <div className="card mb-4">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -157,7 +191,9 @@ export default function Pacientes() {
             {filtrados.length === 0 ? (
               <div className="card text-center text-gray-400 py-10">
                 <p className="text-3xl mb-2">🗂️</p>
-                <p className="text-sm">No hay registros en {mesSeleccionado}</p>
+                <p className="text-sm">
+                  {errorCarga ? 'Error de conexión' : `No hay registros en ${mesSeleccionado}`}
+                </p>
               </div>
             ) : filtrados.map((p) => (
               <div
@@ -271,7 +307,11 @@ export default function Pacientes() {
                 <button onClick={() => imprimirPDF(pacienteSeleccionado)} className="btn-celeste text-xs flex items-center gap-1.5 flex-1">
                   🖨️ Imprimir
                 </button>
-                <button onClick={() => navigate(`/registro?editar=${pacienteSeleccionado.id}`)} className="btn-outline text-xs flex items-center gap-1.5 w-full">
+                {/* MEJORADO: pasa mes en los query params para que Registro pueda cargar y editar correctamente */}
+                <button
+                  onClick={() => navigate(`/registro?editar=${pacienteSeleccionado.id}&mes=${encodeURIComponent(mesSeleccionado)}`)}
+                  className="btn-outline text-xs flex items-center gap-1.5 w-full"
+                >
                   ✏️ Editar Registro
                 </button>
                 <button
@@ -298,11 +338,38 @@ export default function Pacientes() {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bounce-in bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
             <h3 className="font-bold text-gray-800 text-lg mb-2">¿Eliminar registro?</h3>
-            <p className="text-sm text-gray-500 mb-5">Esta acción eliminará el registro del sistema y del Google Sheets. No se puede deshacer.</p>
+            <p className="text-sm text-gray-500 mb-3">
+              Esta acción eliminará el registro del sistema y del Google Sheets. No se puede deshacer.
+            </p>
+            {/* MEJORADO: muestra error si la eliminación falla */}
+            {errorEliminar && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
+                ⚠️ {errorEliminar}
+              </div>
+            )}
             <div className="flex gap-3">
-              <button onClick={() => setConfirmEliminar(null)} className="btn-outline flex-1">Cancelar</button>
-              <button onClick={() => eliminar(confirmEliminar)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-xl transition-all">
-                Eliminar
+              <button
+                onClick={() => { setConfirmEliminar(null); setErrorEliminar(''); }}
+                disabled={eliminando}
+                className="btn-outline flex-1"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => eliminar(confirmEliminar)}
+                disabled={eliminando}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {/* MEJORADO: spinner durante eliminación */}
+                {eliminando ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Eliminando...
+                  </>
+                ) : 'Eliminar'}
               </button>
             </div>
           </div>

@@ -1,39 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { obtenerRegistros } from '../utils/sheets';
+import { obtenerRegistros, obtenerMesActual, MESES } from '../utils/sheets';
 
 const ROSA = '#ec4899';
 const CELESTE = '#0ea5e9';
 const COLORS = ['#ec4899', '#0ea5e9', '#a855f7', '#f59e0b', '#10b981', '#ef4444'];
 
-const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-  'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+// MEJORADO: saludo dinámico según la hora del día
+function obtenerSaludo() {
+  const hora = new Date().getHours();
+  if (hora < 12) return 'Buenos días';
+  if (hora < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+}
 
-const obtenerMesActual = () => {
-  const now = new Date();
-  const mes = MESES[now.getMonth()];
-  const año = now.getFullYear();
-  return año === 2025 ? mes : `${mes} ${año}`;
-};
+// MEJORADO: normaliza fecha a formato DD/MM/YYYY para comparar con las fechas del Sheet
+// El backend guarda fechas como DD/MM/YYYY, la comparación con ISO fallaba siempre
+function fechaHoyFormateada() {
+  const hoy = new Date();
+  const d = String(hoy.getDate()).padStart(2, '0');
+  const m = String(hoy.getMonth() + 1).padStart(2, '0');
+  const a = hoy.getFullYear();
+  return `${d}/${m}/${a}`;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  // MEJORADO: usa obtenerMesActual importada en lugar de duplicar la función
   const [mesSeleccionado, setMesSeleccionado] = useState(obtenerMesActual);
   const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(''); // MEJORADO: estado de error
 
   useEffect(() => {
     setLoading(true);
+    setErrorCarga('');
     obtenerRegistros(mesSeleccionado)
       .then(d => setDatos(Array.isArray(d) ? d : []))
+      // MEJORADO: captura error real en lugar de silenciarlo con mock data
+      .catch(err => {
+        setErrorCarga(err.message || 'Error al conectar con el servidor.');
+        setDatos([]);
+      })
       .finally(() => setLoading(false));
   }, [mesSeleccionado]);
 
   // Estadísticas
   const total = datos.length;
-  const hoy = new Date().toISOString().split('T')[0];
-  const atendidosHoy = datos.filter(d => d.fechaAtencion === hoy).length;
+  // MEJORADO: compara DD/MM/YYYY (formato del Sheet) con fecha de hoy en el mismo formato
+  const hoyFormateado = fechaHoyFormateada();
+  const hoyISO = new Date().toISOString().split('T')[0]; // fallback ISO por si algún registro se guardó sin formatear
+  const atendidosHoy = datos.filter(d =>
+    d.fechaAtencion === hoyFormateado || d.fechaAtencion === hoyISO
+  ).length;
   const gestantes = datos.filter(d => d.gestante === 'G' || d.gestante === 'P').length;
   const positivos = datos.filter(d => d.resultadoTamizaje === 'Positivo').length;
 
@@ -65,10 +85,10 @@ export default function Dashboard() {
 
   return (
     <div className="px-4 py-5 max-w-5xl mx-auto">
-      {/* Saludo */}
+      {/* MEJORADO: saludo dinámico por hora */}
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-          Buenos días, Lic. Janeth 👋
+          {obtenerSaludo()}, Lic. Janeth 👋
         </h1>
         <p className="text-sm text-gray-500 mt-1">
           {new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -104,6 +124,30 @@ export default function Dashboard() {
           <div className="w-5 h-5 border-2 border-rosa-200 border-t-rosa-500 rounded-full animate-spin flex-shrink-0" />
         )}
       </div>
+
+      {/* MEJORADO: banner de error de conexión */}
+      {errorCarga && !loading && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 flex items-center gap-2 text-sm">
+          <span className="text-lg">⚠️</span>
+          <div>
+            <p className="font-semibold">No se pudieron cargar los datos</p>
+            <p className="text-xs mt-0.5">{errorCarga}</p>
+          </div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setErrorCarga('');
+              obtenerRegistros(mesSeleccionado)
+                .then(d => setDatos(Array.isArray(d) ? d : []))
+                .catch(err => setErrorCarga(err.message || 'Error al conectar.'))
+                .finally(() => setLoading(false));
+            }}
+            className="ml-auto text-xs bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg font-semibold transition-colors flex-shrink-0"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* Spinner de carga principal */}
       {loading ? (
@@ -154,14 +198,18 @@ export default function Dashboard() {
                 <span className="w-3 h-3 rounded-full bg-rosa-400 inline-block"></span>
                 Pacientes por Sector
               </h3>
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={porSector} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                  <Bar dataKey="value" fill={ROSA} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {porSector.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">Sin datos para este período</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={porSector} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                    <Bar dataKey="value" fill={ROSA} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             {/* Por sexo */}
@@ -170,22 +218,26 @@ export default function Dashboard() {
                 <span className="w-3 h-3 rounded-full bg-celeste-400 inline-block"></span>
                 Distribución por Sexo
               </h3>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={porSexo}
-                    cx="50%" cy="50%"
-                    innerRadius={50} outerRadius={75}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
-                    fontSize={11}
-                  >
-                    {porSexo.map((_, i) => <Cell key={i} fill={[ROSA, CELESTE][i]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                </PieChart>
-              </ResponsiveContainer>
+              {(porSexo[0].value === 0 && porSexo[1].value === 0) ? (
+                <p className="text-sm text-gray-400 text-center py-8">Sin datos para este período</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie
+                      data={porSexo}
+                      cx="50%" cy="50%"
+                      innerRadius={50} outerRadius={75}
+                      dataKey="value"
+                      label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                      labelLine={false}
+                      fontSize={11}
+                    >
+                      {porSexo.map((_, i) => <Cell key={i} fill={[ROSA, CELESTE][i]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
