@@ -1,0 +1,12 @@
+{
+  "name": "Salud Mental Tambillo",
+  "short_name": "SM Tambillo",
+  "description": "Sistema de Gestión de Salud Mental - Centro de Salud Tambillo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf2f8",
+  "theme_color": "#ec4899",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
