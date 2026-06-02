@@ -5,7 +5,11 @@ const { google } = require('googleapis');
 const path = require('path');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['https://salud-mental-tambillo.vercel.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
