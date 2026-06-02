@@ -15,10 +15,19 @@ app.use(express.json());
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 console.log(`[init] SPREADSHEET_ID cargado: ${SPREADSHEET_ID}`);
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(__dirname, 'credentials.json'),
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+let auth;
+if (process.env.GOOGLE_CREDENTIALS) {
+  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+} else {
+  auth = new google.auth.GoogleAuth({
+    keyFile: path.join(__dirname, 'credentials.json'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+}
 
 async function getSheets() {
   const client = await auth.getClient();
