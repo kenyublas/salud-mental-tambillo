@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useBlocker } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CAMPOS_RUA, CIE10 } from '../data/cie10';
 import { crearRegistro, editarRegistro, obtenerRegistros, obtenerMesActual } from '../utils/sheets';
 import BotFlotante from '../components/BotFlotante';
@@ -119,6 +119,10 @@ export default function Registro() {
   const [confirmGuardar, setConfirmGuardar] = useState(false);
   // formDirty: true cuando el usuario modificó al menos un campo sin guardar aún
   const [formDirty, setFormDirty] = useState(false);
+  // mostrarModalSalir + pendingNavPath: guardia de navegación sin useBlocker
+  const [mostrarModalSalir, setMostrarModalSalir] = useState(false);
+  // null = navigate(-1), string = ruta destino interceptada
+  const [pendingNavPath, setPendingNavPath] = useState(null);
 
   // ── Carga de datos en modo edición ─────────────────────────────────────────
   useEffect(() => {
@@ -148,23 +152,52 @@ export default function Registro() {
       .finally(() => setCargandoDatos(false));
   }, [modoEdicion, editarId, editarMes]);
 
-  // ── Bloqueo de navegación interna con datos sin guardar ────────────────────
-  // useBlocker intercepta cualquier navigate() o <Link> mientras haya datos sin guardar
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      formDirty && !guardado && currentLocation.pathname !== nextLocation.pathname
-  );
+  // ── Guardia de navegación: intercepta clicks en NavLinks del Navbar ────────
+  // Los <NavLink> renderizan <a href="...">. Escuchamos en fase de captura
+  // (antes de que React Router procese el click) para mostrar el modal propio.
+  useEffect(() => {
+    if (!formDirty || guardado) return;
+
+    const handler = (e) => {
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      // Solo rutas internas (no http://, mailto:, etc.)
+      if (!href || /^(https?:\/\/|\/\/|mailto:|tel:)/.test(href)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavPath(href);
+      setMostrarModalSalir(true);
+    };
+
+    // Fase de captura: se ejecuta antes del handler de React Router
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, [formDirty, guardado]);
 
   // ── Bloqueo de cierre/recarga de pestaña ───────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
       if (!formDirty || guardado) return;
       e.preventDefault();
-      e.returnValue = ''; // requerido por Chrome para mostrar el diálogo nativo
+      e.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [formDirty, guardado]);
+
+  // ── Versión segura de navigate: muestra modal si hay datos sin guardar ──────
+  // Úsala en lugar de navigate() directo para todos los botones del componente.
+  // null como path significa "volver atrás" (navigate(-1))
+  const guardiaNavegarSi = useCallback((path) => {
+    if (formDirty && !guardado) {
+      setPendingNavPath(path ?? null);
+      setMostrarModalSalir(true);
+    } else {
+      if (path === null || path === undefined) navigate(-1);
+      else navigate(path);
+    }
+  }, [formDirty, guardado, navigate]);
 
   const esGestante = form.gestante === 'G' || form.gestante === 'P';
   const esMenor = parseInt(form.edad) < 18;
@@ -208,8 +241,9 @@ export default function Registro() {
       } else {
         await crearRegistro(payload);
       }
-      // Marcar como limpio antes de navegar para que el blocker no interfiera
+      // Marcar como limpio antes de navegar para que el listener no interfiera
       setFormDirty(false);
+      setPendingNavPath(null);
       setGuardado(true);
       setTimeout(() => {
         setGuardado(false);
@@ -288,7 +322,7 @@ export default function Registro() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => guardiaNavegarSi(null)}
             className="w-9 h-9 rounded-xl bg-white border border-rosa-200 flex items-center justify-center text-rosa-500 hover:bg-rosa-50"
           >
             ←
@@ -364,7 +398,7 @@ export default function Registro() {
 
         {/* Botones */}
         <div className="flex gap-3 mt-6">
-          <button onClick={() => navigate(-1)} className="btn-outline flex-1">
+          <button onClick={() => guardiaNavegarSi(null)} className="btn-outline flex-1">
             Cancelar
           </button>
           <button
@@ -455,10 +489,9 @@ export default function Registro() {
       )}
 
       {/* ── MODAL: Confirmación al salir con datos sin guardar ────────────────── */}
-      {blocker.state === 'blocked' && (
+      {mostrarModalSalir && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bounce-in bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            {/* Ícono */}
             <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-3xl mx-auto mb-4">
               ⚠️
             </div>
@@ -471,16 +504,22 @@ export default function Registro() {
             </p>
 
             <div className="flex flex-col gap-2.5">
-              {/* Acción principal: quedarse */}
               <button
-                onClick={() => blocker.reset()}
-                className="btn-rosa w-full flex items-center justify-center gap-2"
+                onClick={() => {
+                  setMostrarModalSalir(false);
+                  setPendingNavPath(null);
+                }}
+                className="btn-rosa w-full"
               >
                 Quedarme
               </button>
-              {/* Acción secundaria: salir igual */}
               <button
-                onClick={() => blocker.proceed()}
+                onClick={() => {
+                  setMostrarModalSalir(false);
+                  setFormDirty(false);
+                  if (pendingNavPath === null) navigate(-1);
+                  else navigate(pendingNavPath);
+                }}
                 className="w-full border-2 border-gray-200 text-gray-500 hover:bg-gray-50 font-semibold px-4 py-2 rounded-xl transition-all duration-200 active:scale-95 text-sm"
               >
                 Salir de todas formas
