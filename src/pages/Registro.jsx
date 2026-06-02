@@ -105,7 +105,7 @@ export default function Registro() {
   const [form, setForm] = useState({
     fechaAtencion: '',
     profesional: 'Psicología',
-    responsableAtencion: 'Lic. Janeth Karina Santacruz Espiritu',
+    responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
   });
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
