@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useBlocker } from 'react-router-dom';
 import { CAMPOS_RUA, CIE10 } from '../data/cie10';
 import { crearRegistro, editarRegistro, obtenerRegistros, obtenerMesActual } from '../utils/sheets';
 import BotFlotante from '../components/BotFlotante';
@@ -97,10 +97,9 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
 // ─── Componente principal ───────────────────────────────────────────────────
 export default function Registro() {
   const navigate = useNavigate();
-  // MEJORADO: lee parámetros de URL para modo edición
   const [searchParams] = useSearchParams();
-  const editarId = searchParams.get('editar');   // número de fila en el Sheet
-  const editarMes = searchParams.get('mes');      // nombre de la hoja (ej: "JUNIO 2026")
+  const editarId = searchParams.get('editar');
+  const editarMes = searchParams.get('mes');
   const modoEdicion = Boolean(editarId && editarMes);
 
   const [form, setForm] = useState({
@@ -113,11 +112,15 @@ export default function Registro() {
   const [error, setError] = useState('');
   const [busquedaCIE, setBusquedaCIE] = useState('');
   const [mostrarCIE, setMostrarCIE] = useState(false);
-  // MEJORADO: estado de carga de datos para modo edición
   const [cargandoDatos, setCargandoDatos] = useState(modoEdicion);
   const [errorCarga, setErrorCarga] = useState('');
 
-  // MEJORADO: carga los datos del paciente cuando está en modo edición
+  // ── Estado de los dos modales de confirmación ───────────────────────────────
+  const [confirmGuardar, setConfirmGuardar] = useState(false);
+  // formDirty: true cuando el usuario modificó al menos un campo sin guardar aún
+  const [formDirty, setFormDirty] = useState(false);
+
+  // ── Carga de datos en modo edición ─────────────────────────────────────────
   useEffect(() => {
     if (!modoEdicion) return;
     setCargandoDatos(true);
@@ -129,7 +132,6 @@ export default function Registro() {
           setErrorCarga('No se encontró el registro. Puede haber sido eliminado.');
           return;
         }
-        // MEJORADO: convierte fechas DD/MM/YYYY → YYYY-MM-DD para los campos date del formulario
         const camposFecha = ['fechaAtencion', 'fechaNacimiento', 'fur', 'fechaProbableParto', 'fechaProxCita'];
         const formData = { ...paciente };
         camposFecha.forEach(cf => {
@@ -139,16 +141,40 @@ export default function Registro() {
           }
         });
         setForm(formData);
+        // Los datos cargados NO se consideran cambios del usuario
+        setFormDirty(false);
       })
       .catch(err => setErrorCarga(err.message || 'Error al cargar el registro.'))
       .finally(() => setCargandoDatos(false));
   }, [modoEdicion, editarId, editarMes]);
 
+  // ── Bloqueo de navegación interna con datos sin guardar ────────────────────
+  // useBlocker intercepta cualquier navigate() o <Link> mientras haya datos sin guardar
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      formDirty && !guardado && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // ── Bloqueo de cierre/recarga de pestaña ───────────────────────────────────
+  useEffect(() => {
+    const handler = (e) => {
+      if (!formDirty || guardado) return;
+      e.preventDefault();
+      e.returnValue = ''; // requerido por Chrome para mostrar el diálogo nativo
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [formDirty, guardado]);
+
   const esGestante = form.gestante === 'G' || form.gestante === 'P';
   const esMenor = parseInt(form.edad) < 18;
   const tamizajePositivo = form.resultadoTamizaje === 'Positivo';
 
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  // set() marca el formulario como sucio al primer cambio del usuario
+  const set = (key, val) => {
+    setForm(f => ({ ...f, [key]: val }));
+    setFormDirty(true);
+  };
 
   const camposVisibles = CAMPOS_RUA.filter(c => {
     if (c.conditionalOn === 'esGestante' && !esGestante) return false;
@@ -158,13 +184,15 @@ export default function Registro() {
   });
 
   const { activo, pausado, escuchando, procesando, campoActual, mensajeBot, toggle } =
-   useVoiceAssistant({
-      onDatosActualizados: (d) => setForm(f => ({ ...f, ...d })),
-      onGuardar: (d) => handleGuardar(d),
+    useVoiceAssistant({
+      // El asistente de voz también marca el form como sucio al rellenar campos
+      onDatosActualizados: (d) => { setForm(f => ({ ...f, ...d })); setFormDirty(true); },
+      onGuardar: (d) => handleGuardar(d), // voz bypasea el modal de confirmación
       camposVisibles,
       datosIniciales: form,
     });
 
+  // ── Lógica de guardado real ────────────────────────────────────────────────
   const handleGuardar = async (datosExtra = {}) => {
     const mesDestino = modoEdicion ? editarMes : obtenerMesActual();
     const payload = { ...form, ...datosExtra, mes: mesDestino };
@@ -176,16 +204,16 @@ export default function Registro() {
     setError('');
     try {
       if (modoEdicion) {
-        // MEJORADO: en modo edición llama editarRegistro con el id de fila y el mes correcto
         await editarRegistro(editarId, payload);
       } else {
         await crearRegistro(payload);
       }
+      // Marcar como limpio antes de navegar para que el blocker no interfiera
+      setFormDirty(false);
       setGuardado(true);
       setTimeout(() => {
         setGuardado(false);
         if (modoEdicion) {
-          // Vuelve a la lista de pacientes tras editar
           navigate('/pacientes');
         } else {
           setForm({
@@ -196,45 +224,34 @@ export default function Registro() {
         }
       }, 2000);
     } catch (err) {
-      // MEJORADO: muestra el mensaje de error real del servidor
       setError(err.message || 'Error al guardar. Intenta de nuevo.');
     } finally {
       setGuardando(false);
     }
   };
 
+  // ── Validación previa al modal de confirmación ────────────────────────────
+  // El botón "Guardar" primero valida y luego abre el modal (no llama handleGuardar todavía)
+  const pedirConfirmacionGuardar = () => {
+    if (!form.nombres || !form.dni) {
+      setError('Nombres y DNI son obligatorios.');
+      return;
+    }
+    setError('');
+    setConfirmGuardar(true);
+  };
+
   const secciones = [
-    {
-      titulo: '📅 Datos de Atención',
-      campos: ['fechaAtencion', 'profesional', 'responsableAtencion', 'tipoAtencion'],
-    },
-    {
-      titulo: '👤 Datos del Paciente',
-      campos: ['apoderado', 'nombres', 'dni', 'fechaNacimiento', 'edad', 'sexo'],
-    },
-    {
-      titulo: '🤰 Gestante / Puérpera',
-      campos: ['gestante', 'fur', 'semanaGestacional', 'fechaProbableParto'],
-    },
-    {
-      titulo: '📍 Ubicación',
-      campos: ['hcl', 'sector', 'sectorista', 'seguro', 'celular'],
-    },
-    {
-      titulo: '🩺 Consulta y Diagnóstico',
-      campos: ['motivoConsulta', 'tamizaje', 'resultadoTamizaje', 'diagnostico'],
-    },
-    {
-      titulo: '📋 Seguimiento',
-      campos: ['segundoControl', 'intervencion', 'fechaProxCita', 'terminoAtencion', 'referencia', 'contrarreferencia'],
-    },
-    {
-      titulo: '⚙️ Actividades Complementarias',
-      campos: ['valoracionRiesgo', 'sesionMovilizacion', 'visitaDomiciliaria', 'medicamentos', 'teleorientacion', 'promsa', 'campana', 'observaciones'],
-    },
+    { titulo: '📅 Datos de Atención',       campos: ['fechaAtencion', 'profesional', 'responsableAtencion', 'tipoAtencion'] },
+    { titulo: '👤 Datos del Paciente',       campos: ['apoderado', 'nombres', 'dni', 'fechaNacimiento', 'edad', 'sexo'] },
+    { titulo: '🤰 Gestante / Puérpera',      campos: ['gestante', 'fur', 'semanaGestacional', 'fechaProbableParto'] },
+    { titulo: '📍 Ubicación',                campos: ['hcl', 'sector', 'sectorista', 'seguro', 'celular'] },
+    { titulo: '🩺 Consulta y Diagnóstico',   campos: ['motivoConsulta', 'tamizaje', 'resultadoTamizaje', 'diagnostico'] },
+    { titulo: '📋 Seguimiento',              campos: ['segundoControl', 'intervencion', 'fechaProxCita', 'terminoAtencion', 'referencia', 'contrarreferencia'] },
+    { titulo: '⚙️ Actividades Complementarias', campos: ['valoracionRiesgo', 'sesionMovilizacion', 'visitaDomiciliaria', 'medicamentos', 'teleorientacion', 'promsa', 'campana', 'observaciones'] },
   ];
 
-  // MEJORADO: pantalla de carga mientras se obtienen datos en modo edición
+  // ── Pantallas de carga y error del modo edición ────────────────────────────
   if (cargandoDatos) {
     return (
       <div className="px-4 py-5 max-w-3xl mx-auto flex flex-col items-center justify-center min-h-64 gap-4">
@@ -246,7 +263,6 @@ export default function Registro() {
     );
   }
 
-  // MEJORADO: pantalla de error si no se encuentra el registro
   if (errorCarga) {
     return (
       <div className="px-4 py-5 max-w-3xl mx-auto">
@@ -262,124 +278,217 @@ export default function Registro() {
     );
   }
 
+  // ── Render principal ───────────────────────────────────────────────────────
   return (
-    <div
-      className="px-4 py-5 max-w-3xl mx-auto pb-24"
-      onClick={() => setMostrarCIE(false)}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl bg-white border border-rosa-200 flex items-center justify-center text-rosa-500 hover:bg-rosa-50"
-        >
-          ←
-        </button>
-        <div>
-          {/* MEJORADO: título dinámico según modo */}
-          <h1 className="text-xl font-extrabold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            {modoEdicion ? '✏️ Editar Registro RUA' : 'Nuevo Registro RUA'}
-          </h1>
-          <p className="text-xs text-gray-400">
-            {modoEdicion ? `Editando: ${editarMes}` : obtenerMesActual()}
-          </p>
+    <>
+      <div
+        className="px-4 py-5 max-w-3xl mx-auto pb-24"
+        onClick={() => setMostrarCIE(false)}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-xl bg-white border border-rosa-200 flex items-center justify-center text-rosa-500 hover:bg-rosa-50"
+          >
+            ←
+          </button>
+          <div>
+            <h1 className="text-xl font-extrabold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              {modoEdicion ? '✏️ Editar Registro RUA' : 'Nuevo Registro RUA'}
+            </h1>
+            <p className="text-xs text-gray-400">
+              {modoEdicion ? `Editando: ${editarMes}` : obtenerMesActual()}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Alertas */}
-      {guardado && (
-        <div className="bounce-in bg-green-100 border border-green-300 text-green-800 rounded-xl px-4 py-3 mb-4 flex items-center gap-2 font-semibold text-sm">
-          ✅ {modoEdicion ? 'Registro actualizado correctamente' : 'Registro guardado correctamente'}
-        </div>
-      )}
-      {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
-          ⚠️ {error}
-        </div>
-      )}
+        {/* Alertas */}
+        {guardado && (
+          <div className="bounce-in bg-green-100 border border-green-300 text-green-800 rounded-xl px-4 py-3 mb-4 flex items-center gap-2 font-semibold text-sm">
+            ✅ {modoEdicion ? 'Registro actualizado correctamente' : 'Registro guardado correctamente'}
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-100 border border-red-300 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
+            ⚠️ {error}
+          </div>
+        )}
 
-      {/* Secciones del formulario */}
-      <div className="space-y-4">
-        {secciones.map(sec => {
-          const camposSec = sec.campos
-            .map(k => CAMPOS_RUA.find(c => c.key === k))
-            .filter(c => c && camposVisibles.find(cv => cv.key === c.key));
+        {/* Secciones del formulario */}
+        <div className="space-y-4">
+          {secciones.map(sec => {
+            const camposSec = sec.campos
+              .map(k => CAMPOS_RUA.find(c => c.key === k))
+              .filter(c => c && camposVisibles.find(cv => cv.key === c.key));
 
-          if (camposSec.length === 0) return null;
+            if (camposSec.length === 0) return null;
 
-          return (
-            <div key={sec.titulo} className="card fade-in-up">
-              <h3 className="section-title">{sec.titulo}</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {camposSec.map(campo => (
-                  <div
-                    key={campo.key}
-                    className={
-                      campo.type === 'textarea' ||
-                      campo.key === 'nombres' ||
-                      campo.key === 'motivoConsulta'
-                        ? 'sm:col-span-2'
-                        : ''
-                    }
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <label className="label">
-                      {campo.label}
-                      {campo.required && <span className="text-rosa-500 ml-0.5">*</span>}
-                    </label>
-                    <InputField
-                      campo={campo}
-                      value={form[campo.key] || ''}
-                      onChange={set}
-                      isActivo={activo && camposVisibles[campoActual]?.key === campo.key}
-                      busquedaCIE={busquedaCIE}
-                      setBusquedaCIE={setBusquedaCIE}
-                      mostrarCIE={mostrarCIE}
-                      setMostrarCIE={setMostrarCIE}
-                    />
-                  </div>
-                ))}
+            return (
+              <div key={sec.titulo} className="card fade-in-up">
+                <h3 className="section-title">{sec.titulo}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {camposSec.map(campo => (
+                    <div
+                      key={campo.key}
+                      className={
+                        campo.type === 'textarea' ||
+                        campo.key === 'nombres' ||
+                        campo.key === 'motivoConsulta'
+                          ? 'sm:col-span-2'
+                          : ''
+                      }
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <label className="label">
+                        {campo.label}
+                        {campo.required && <span className="text-rosa-500 ml-0.5">*</span>}
+                      </label>
+                      <InputField
+                        campo={campo}
+                        value={form[campo.key] || ''}
+                        onChange={set}
+                        isActivo={activo && camposVisibles[campoActual]?.key === campo.key}
+                        busquedaCIE={busquedaCIE}
+                        setBusquedaCIE={setBusquedaCIE}
+                        mostrarCIE={mostrarCIE}
+                        setMostrarCIE={setMostrarCIE}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Botones */}
+        <div className="flex gap-3 mt-6">
+          <button onClick={() => navigate(-1)} className="btn-outline flex-1">
+            Cancelar
+          </button>
+          <button
+            onClick={pedirConfirmacionGuardar}
+            disabled={guardando}
+            className="btn-rosa flex-1 flex items-center justify-center gap-2"
+          >
+            {guardando ? (
+              <>
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {modoEdicion ? 'Actualizando...' : 'Guardando...'}
+              </>
+            ) : modoEdicion ? '💾 Actualizar Registro' : '💾 Guardar Registro'}
+          </button>
+        </div>
+
+        {/* Bot flotante — solo en modo creación */}
+        {!modoEdicion && (
+          <BotFlotante
+            activo={activo}
+            pausado={pausado}
+            escuchando={escuchando}
+            procesando={procesando}
+            mensajeBot={mensajeBot}
+            campoActual={campoActual}
+            campo={camposVisibles[campoActual]}
+            onToggle={toggle}
+          />
+        )}
+      </div>
+
+      {/* ── MODAL: Confirmación antes de guardar ─────────────────────────────── */}
+      {confirmGuardar && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bounce-in bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            {/* Ícono */}
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-3xl mx-auto mb-4">
+              💾
             </div>
-          );
-        })}
-      </div>
 
-      {/* Botones guardar */}
-      <div className="flex gap-3 mt-6">
-        <button onClick={() => navigate(-1)} className="btn-outline flex-1">
-          Cancelar
-        </button>
-        <button
-          onClick={() => handleGuardar()}
-          disabled={guardando}
-          className="btn-rosa flex-1 flex items-center justify-center gap-2"
-        >
-          {guardando ? (
-            <>
-              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              {modoEdicion ? 'Actualizando...' : 'Guardando...'}
-            </>
-          ) : modoEdicion ? '💾 Actualizar Registro' : '💾 Guardar Registro'}
-        </button>
-      </div>
+            <h3 className="font-extrabold text-gray-800 text-lg text-center mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              {modoEdicion ? '¿Actualizar este registro?' : '¿Guardar este registro?'}
+            </h3>
+            <p className="text-xs text-gray-400 text-center mb-4">
+              Verifica que los datos sean correctos antes de confirmar
+            </p>
 
-      {/* Bot flotante — solo en modo creación */}
-      {!modoEdicion && (
-        <BotFlotante
-          activo={activo}
-          pausado={pausado}
-          escuchando={escuchando}
-          procesando={procesando}
-          mensajeBot={mensajeBot}
-          campoActual={campoActual}
-          campo={camposVisibles[campoActual]}
-          onToggle={toggle}
-        />
+            {/* Resumen del paciente */}
+            <div className="bg-rosa-50 border border-rosa-100 rounded-xl px-4 py-3 mb-5 space-y-2">
+              <div className="flex gap-2 items-start">
+                <span className="text-gray-400 text-xs w-24 flex-shrink-0 pt-0.5">Paciente</span>
+                <span className="font-bold text-gray-800 text-sm leading-tight">{form.nombres || '—'}</span>
+              </div>
+              <div className="flex gap-2 items-center">
+                <span className="text-gray-400 text-xs w-24 flex-shrink-0">Fecha atención</span>
+                <span className="font-semibold text-gray-700 text-sm">{form.fechaAtencion || '—'}</span>
+              </div>
+              {form.dni && (
+                <div className="flex gap-2 items-center">
+                  <span className="text-gray-400 text-xs w-24 flex-shrink-0">DNI</span>
+                  <span className="font-semibold text-gray-700 text-sm">{form.dni}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmGuardar(false)}
+                className="btn-outline flex-1"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmGuardar(false);
+                  handleGuardar();
+                }}
+                className="btn-rosa flex-1"
+              >
+                Sí, guardar registro
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+
+      {/* ── MODAL: Confirmación al salir con datos sin guardar ────────────────── */}
+      {blocker.state === 'blocked' && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bounce-in bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            {/* Ícono */}
+            <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-3xl mx-auto mb-4">
+              ⚠️
+            </div>
+
+            <h3 className="font-extrabold text-gray-800 text-lg text-center mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              ¿Seguro que quieres salir?
+            </h3>
+            <p className="text-sm text-gray-500 text-center mb-6 leading-relaxed">
+              Tienes datos sin guardar. Si sales ahora, perderás la información ingresada.
+            </p>
+
+            <div className="flex flex-col gap-2.5">
+              {/* Acción principal: quedarse */}
+              <button
+                onClick={() => blocker.reset()}
+                className="btn-rosa w-full flex items-center justify-center gap-2"
+              >
+                Quedarme
+              </button>
+              {/* Acción secundaria: salir igual */}
+              <button
+                onClick={() => blocker.proceed()}
+                className="w-full border-2 border-gray-200 text-gray-500 hover:bg-gray-50 font-semibold px-4 py-2 rounded-xl transition-all duration-200 active:scale-95 text-sm"
+              >
+                Salir de todas formas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
