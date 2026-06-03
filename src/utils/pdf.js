@@ -95,7 +95,7 @@ export async function generarPDFPaciente(paciente) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(236, 72, 153);
-  doc.text('CENTRO DE SALUD TAMBILLO', W / 2, 23.5, { align: 'center' });
+  doc.text('CENTRO DE SALUD TAMBILLO-UMARI', W / 2, 23.5, { align: 'center' });
 
   // ── Línea separadora celeste (debajo de logos y texto) ─────────────────────
   doc.setDrawColor(14, 165, 233);

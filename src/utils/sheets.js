@@ -59,6 +59,14 @@ export async function buscarPaciente(dni) {
   return apiFetch(`${API_URL}/api/paciente/${dni}`).catch(() => null);
 }
 
+// Búsqueda global en todas las hojas (2025 + 2026)
+// q vacío → devuelve todos los registros de todos los meses
+export async function buscarEnTodos(q = '', tipo = 'todos') {
+  return apiFetch(
+    `${API_URL}/api/buscar?q=${encodeURIComponent(q)}&tipo=${encodeURIComponent(tipo)}`
+  );
+}
+
 // ── Utilidad compartida de mes actual ──────────────────────────────────────────
 // MEJORADO: exportada para evitar duplicación en Dashboard, Pacientes, OtrasPaginas
 const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
