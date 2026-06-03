@@ -508,6 +508,116 @@ app.get('/api/crear-todas-hojas', async (req, res) => {
   }
 });
 
+// GET /api/buscar?q=TEXTO&tipo=dni|nombre|todos
+// Busca en todas las hojas de 2025 y 2026 en paralelo
+app.get('/api/buscar', async (req, res) => {
+  const q     = (req.query.q    || '').trim();
+  const tipo  = (req.query.tipo || 'todos');
+  const qLower = q.toLowerCase();
+
+  console.log(`[GET /api/buscar] q="${q}" tipo="${tipo}"`);
+  try {
+    const sheets = await getSheets();
+
+    // Solo buscar en hojas que realmente existen en el spreadsheet
+    const info = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+    const existentes = new Set(info.data.sheets.map(s => s.properties.title));
+
+    const MESES_NOMBRES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+      'JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+
+    const hojasBuscar = [
+      ...MESES_NOMBRES,
+      ...MESES_NOMBRES.map(m => `${m} 2026`),
+    ].filter(h => existentes.has(h));
+
+    console.log(`[GET /api/buscar] Buscando en ${hojasBuscar.length} hojas en paralelo`);
+
+    // Leer todas las hojas en paralelo
+    const porHoja = await Promise.all(
+      hojasBuscar.map(async (hoja) => {
+        try {
+          const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${hoja}!A1:AL`,
+          });
+
+          const allRows = response.data.values || [];
+          if (!allRows.length) return [];
+
+          // Detectar fila de encabezados (misma lógica que GET /api/registros)
+          let headerIdx = 0;
+          let colIndex = {};
+          for (let i = 0; i < Math.min(5, allRows.length); i++) {
+            const ci = buildColIndex(allRows[i]);
+            if (Object.keys(ci).length >= 4) {
+              headerIdx = i;
+              colIndex = ci;
+              break;
+            }
+          }
+
+          const iNombres  = colIndex.nombres  ?? 5;
+          const iDni      = colIndex.dni      ?? 6;
+          const iNegativo = colIndex.negativo ?? 21;
+          const iPositivo = colIndex.positivo ?? 22;
+
+          let dataStartIdx = headerIdx + 1;
+          for (let i = headerIdx + 1; i < allRows.length; i++) {
+            if ((allRows[i][iNombres] || '').trim()) {
+              dataStartIdx = i;
+              break;
+            }
+          }
+
+          return allRows.slice(dataStartIdx)
+            .map((fila, i) => ({ fila, rowNum: dataStartIdx + i + 1 }))
+            .filter(({ fila }) => (fila[iNombres] || '').trim())
+            .filter(({ fila }) => {
+              if (!q) return true; // sin query → incluir todos
+              const nombre = (fila[iNombres] || '').toLowerCase();
+              const dni    = (fila[iDni]     || '').trim();
+              if (tipo === 'dni')    return dni === q;
+              if (tipo === 'nombre') return nombre.includes(qLower);
+              // tipo === 'todos'
+              return dni === q || nombre.includes(qLower);
+            })
+            .map(({ fila, rowNum }) => {
+              const obj = { id: rowNum, mes: hoja };
+              COLUMNAS.forEach((col, posIdx) => {
+                const idx = colIndex[col] !== undefined ? colIndex[col] : posIdx;
+                obj[col] = (fila[idx] || '');
+              });
+              const neg = (fila[iNegativo] || '').toUpperCase();
+              const pos = (fila[iPositivo] || '').toUpperCase();
+              obj.resultadoTamizaje = neg === 'X' ? 'Negativo' : pos === 'X' ? 'Positivo' : '';
+              return obj;
+            });
+        } catch (err) {
+          // Si la hoja no existe o hay error puntual, no detiene el resto
+          console.warn(`[buscar] Hoja "${hoja}" omitida: ${err.message}`);
+          return [];
+        }
+      })
+    );
+
+    const todos = porHoja.flat();
+
+    // Ordenar por fecha de atención descendente (formato DD/MM/YYYY)
+    const parseFecha = (f = '') => {
+      const m = f.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      return m ? new Date(`${m[3]}-${m[2]}-${m[1]}`).getTime() : 0;
+    };
+    todos.sort((a, b) => parseFecha(b.fechaAtencion) - parseFecha(a.fechaAtencion));
+
+    console.log(`[GET /api/buscar] Total resultados: ${todos.length}`);
+    res.json(todos);
+  } catch (error) {
+    console.error('[GET /api/buscar] ERROR:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check
 app.get('/api/ping', (req, res) => res.json({ ok: true, mensaje: 'Backend Salud Mental Tambillo activo' }));
 
