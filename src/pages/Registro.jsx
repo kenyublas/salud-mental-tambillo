@@ -1,9 +1,81 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CAMPOS_RUA, CIE10 } from '../data/cie10';
+import { CAMPOS_RUA, CIE10, TAMIZAJES } from '../data/cie10';
 import { crearRegistro, editarRegistro, obtenerRegistros, obtenerMesActual } from '../utils/sheets';
 import BotFlotante from '../components/BotFlotante';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
+
+// ─── TamizajeMultiInput: chips de códigos con selector + texto libre ─────────
+function TamizajeMultiInput({ value, onChange, isActivo }) {
+  const [inputVal, setInputVal] = useState('');
+
+  const chips = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  const agregar = (texto) => {
+    const nuevos = texto.split(',').map(s => s.trim()).filter(Boolean);
+    if (!nuevos.length) return;
+    const combinado = [...new Set([...chips, ...nuevos])];
+    onChange(combinado.join(', '));
+    setInputVal('');
+  };
+
+  const eliminar = (codigo) => {
+    const nuevos = chips.filter(c => c !== codigo);
+    onChange(nuevos.join(', '));
+  };
+
+  const disponibles = TAMIZAJES.filter(t => !chips.includes(t));
+  const base = `input-field ${isActivo ? 'ring-2 ring-rosa-400 border-rosa-300' : ''}`;
+
+  return (
+    <div className="space-y-2">
+      {chips.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {chips.map(c => (
+            <span key={c} className="inline-flex items-center gap-1 bg-rosa-100 text-rosa-700 text-xs font-bold px-2.5 py-1 rounded-full">
+              {c}
+              <button
+                type="button"
+                onClick={() => eliminar(c)}
+                className="text-rosa-400 hover:text-rosa-600 font-bold text-sm leading-none ml-0.5"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2">
+        {disponibles.length > 0 && (
+          <select
+            className={`${base} flex-1`}
+            value=""
+            onChange={e => { if (e.target.value) agregar(e.target.value); }}
+          >
+            <option value="">Seleccionar código...</option>
+            {disponibles.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        )}
+        <input
+          className={`${base} flex-1`}
+          value={inputVal}
+          onChange={e => setInputVal(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); agregar(inputVal); } }}
+          placeholder="Otro código o separados por coma..."
+          autoComplete="off"
+        />
+        <button
+          type="button"
+          onClick={() => agregar(inputVal)}
+          disabled={!inputVal.trim()}
+          className="px-3 py-2 bg-rosa-500 hover:bg-rosa-600 text-white text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-40 flex-shrink-0"
+        >
+          Agregar
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ─── InputField FUERA del componente para evitar re-render y pérdida de foco ───
 function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusquedaCIE, mostrarCIE, setMostrarCIE }) {
@@ -34,6 +106,16 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
         value={value}
         onChange={e => onChange(campo.key, e.target.value)}
         placeholder={`Ingrese ${campo.label.toLowerCase()}...`}
+      />
+    );
+  }
+
+  if (campo.type === 'tamizaje-multi') {
+    return (
+      <TamizajeMultiInput
+        value={value}
+        onChange={(newVal) => onChange(campo.key, newVal)}
+        isActivo={isActivo}
       />
     );
   }
@@ -367,6 +449,7 @@ export default function Registro() {
                       key={campo.key}
                       className={
                         campo.type === 'textarea' ||
+                        campo.type === 'tamizaje-multi' ||
                         campo.key === 'nombres' ||
                         campo.key === 'motivoConsulta'
                           ? 'sm:col-span-2'

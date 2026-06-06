@@ -77,7 +77,7 @@ export const CAMPOS_RUA = [
   { key: 'seguro', label: 'SIS / ES SALUD', type: 'select', options: SEGUROS },
   { key: 'celular', label: 'N° Celular', type: 'text' },
   { key: 'motivoConsulta', label: 'Motivo de Consulta', type: 'textarea', required: true },
-  { key: 'tamizaje', label: 'Tamizaje', type: 'select', options: TAMIZAJES },
+  { key: 'tamizaje', label: 'Tamizaje', type: 'tamizaje-multi', options: TAMIZAJES },
   { key: 'resultadoTamizaje', label: 'Resultado Tamizaje', type: 'select', options: ['Negativo', 'Positivo'] },
   { key: 'diagnostico', label: 'Diagnóstico (CIE-10)', type: 'cie10', required: true },
   { key: 'segundoControl', label: '2do Control', type: 'text' },

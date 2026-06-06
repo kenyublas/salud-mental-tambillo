@@ -14,9 +14,9 @@ function Seccion({ titulo, campos }) {
       <p className="text-[10px] font-bold text-rosa-600 bg-rosa-50 px-2 py-1 rounded-lg mb-1.5 uppercase tracking-wide">{titulo}</p>
       <div className="space-y-1 mb-2">
         {visibles.map(([label, val]) => (
-          <div key={label} className="flex gap-2">
-            <span className="text-gray-400 w-28 flex-shrink-0 text-[10px] leading-4">{label}</span>
-            <span className="font-semibold text-gray-800 text-[10px] leading-4 flex-1">{val}</span>
+          <div key={label} className="flex gap-2 items-start">
+            <span className="text-gray-400 w-28 flex-shrink-0 text-[10px] leading-4 pt-0.5">{label}</span>
+            <div className="font-semibold text-gray-800 text-[10px] leading-4 flex-1">{val}</div>
           </div>
         ))}
       </div>
@@ -196,7 +196,15 @@ export default function Pacientes() {
           ]} />
           <Seccion titulo="Consulta y Diagnóstico" campos={[
             ['Motivo Consulta', p.motivoConsulta],
-            ['Tamizaje', p.tamizaje],
+            ['Tamizaje', p.tamizaje ? (
+              <div className="flex flex-wrap gap-1 -mt-0.5">
+                {p.tamizaje.split(',').map(s => s.trim()).filter(Boolean).map(c => (
+                  <span key={c} className="bg-rosa-100 text-rosa-700 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                    {c}
+                  </span>
+                ))}
+              </div>
+            ) : null],
             ['Resultado Tamizaje', p.resultadoTamizaje],
             ['Diagnóstico', p.diagnostico],
           ]} />
