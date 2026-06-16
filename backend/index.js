@@ -13,7 +13,9 @@ app.use(cors({
 app.use(express.json());
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+const SPREADSHEET_ID_2 = process.env.SPREADSHEET_ID_2;
 console.log(`[init] SPREADSHEET_ID cargado: ${SPREADSHEET_ID}`);
+console.log(`[init] SPREADSHEET_ID_2 cargado: ${SPREADSHEET_ID_2}`);
 
 let auth;
 if (process.env.GOOGLE_CREDENTIALS) {
@@ -614,6 +616,113 @@ app.get('/api/buscar', async (req, res) => {
     res.json(todos);
   } catch (error) {
     console.error('[GET /api/buscar] ERROR:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── ENDPOINTS SEGUIMIENTO (SPREADSHEET_ID_2) ─────────────
+
+// GET /api/seguimiento/hojas - lista todas las hojas del segundo spreadsheet
+app.get('/api/seguimiento/hojas', async (req, res) => {
+  console.log(`[GET /api/seguimiento/hojas] spreadsheetId2="${SPREADSHEET_ID_2}"`);
+  try {
+    const sheets = await getSheets();
+    const info = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID_2 });
+    const hojas = info.data.sheets.map(s => ({
+      id: s.properties.sheetId,
+      nombre: s.properties.title,
+    }));
+    console.log(`[GET /api/seguimiento/hojas] Hojas encontradas: ${hojas.map(h => h.nombre).join(', ')}`);
+    res.json(hojas);
+  } catch (error) {
+    console.error('[GET /api/seguimiento/hojas] ERROR:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/seguimiento/:hoja - retorna registros desde la fila 4 en adelante
+app.get('/api/seguimiento/:hoja', async (req, res) => {
+  const hoja = req.params.hoja;
+  console.log(`[GET /api/seguimiento/${hoja}] spreadsheetId2="${SPREADSHEET_ID_2}"`);
+  try {
+    const sheets = await getSheets();
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID_2,
+      range: `${hoja}!A1:ZZ`,
+    });
+    const allRows = response.data.values || [];
+    // Omitir primeras 3 filas (encabezados/títulos); datos desde fila 4 (índice 3)
+    const dataRows = allRows.slice(3);
+    const registros = dataRows
+      .map((fila, i) => ({ id: i + 4, valores: fila }))
+      .filter(({ valores }) => valores.some(v => (v || '').trim()));
+    console.log(`[GET /api/seguimiento/${hoja}] Registros: ${registros.length}`);
+    res.json(registros);
+  } catch (error) {
+    console.error(`[GET /api/seguimiento/${hoja}] ERROR:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/seguimiento/:hoja - agrega un nuevo registro al final
+app.post('/api/seguimiento/:hoja', async (req, res) => {
+  const hoja = req.params.hoja;
+  const valores = req.body.valores || [];
+  console.log(`[POST /api/seguimiento/${hoja}] spreadsheetId2="${SPREADSHEET_ID_2}"`);
+  try {
+    const sheets = await getSheets();
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID_2,
+      range: `${hoja}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: [valores] },
+    });
+    console.log(`[POST /api/seguimiento/${hoja}] Registro agregado OK`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`[POST /api/seguimiento/${hoja}] ERROR:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/seguimiento/:hoja/:fila - edita un registro existente
+app.put('/api/seguimiento/:hoja/:fila', async (req, res) => {
+  const hoja = req.params.hoja;
+  const numFila = req.params.fila;
+  const valores = req.body.valores || [];
+  console.log(`[PUT /api/seguimiento/${hoja}/${numFila}] spreadsheetId2="${SPREADSHEET_ID_2}"`);
+  try {
+    const sheets = await getSheets();
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID_2,
+      range: `${hoja}!A${numFila}`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [valores] },
+    });
+    console.log(`[PUT /api/seguimiento/${hoja}/${numFila}] Actualización OK`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`[PUT /api/seguimiento/${hoja}/${numFila}] ERROR:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/seguimiento/:hoja/:fila - limpia una fila del registro
+app.delete('/api/seguimiento/:hoja/:fila', async (req, res) => {
+  const hoja = req.params.hoja;
+  const numFila = req.params.fila;
+  console.log(`[DELETE /api/seguimiento/${hoja}/${numFila}] spreadsheetId2="${SPREADSHEET_ID_2}"`);
+  try {
+    const sheets = await getSheets();
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId: SPREADSHEET_ID_2,
+      range: `${hoja}!A${numFila}:ZZ${numFila}`,
+    });
+    console.log(`[DELETE /api/seguimiento/${hoja}/${numFila}] Limpieza OK`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`[DELETE /api/seguimiento/${hoja}/${numFila}] ERROR:`, error.message);
     res.status(500).json({ error: error.message });
   }
 });
