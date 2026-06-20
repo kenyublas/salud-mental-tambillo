@@ -240,17 +240,21 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
                 Datos adicionales
               </h3>
               <div className="space-y-2">
-                {schema.colsMeta.map(c => (
-                  <div key={c.key}>
-                    <label className="text-xs font-semibold text-gray-500 mb-1 block">{c.label}</label>
-                    <input
-                      className="input-field w-full text-sm"
-                      value={metaEdit[c.key] || ''}
-                      onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))}
-                      placeholder={c.label}
-                    />
-                  </div>
-                ))}
+{schema.colsMeta.map(c => {
+  const esFecha = c.key === 'proyeccion' || c.key === 'referido' || c.label.toLowerCase().includes('fecha') || c.label.toLowerCase().includes('proyeccion');
+  return (
+    <div key={c.key}>
+      <label className="text-xs font-semibold text-gray-500 mb-1 block">{c.label}</label>
+      <input
+        className="input-field w-full text-sm"
+        type={esFecha ? 'date' : 'text'}
+        value={metaEdit[c.key] || ''}
+        onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))}
+        placeholder={esFecha ? '' : c.label}
+      />
+    </div>
+  );
+})}
                 <button
                   onClick={guardarMeta}
                   disabled={guardandoMeta}
@@ -508,16 +512,26 @@ function NuevoRegistro({ hojas, onGuardado }) {
               </div>
 
               {/* Campos meta */}
-              {schema.colsMeta && schema.colsMeta.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {schema.colsMeta.map(c => (
-                    <div key={c.key}>
-                      <label className="label">{c.label}</label>
-                      <input className="input-field w-full" value={form[c.key] || ''} onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))} placeholder={c.label} />
-                    </div>
-                  ))}
-                </div>
-              )}
+{/* Campos meta */}
+{schema.colsMeta && schema.colsMeta.length > 0 && (
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {schema.colsMeta.map(c => {
+      const esFecha = c.key === 'proyeccion' || c.key === 'referido' || c.key === 'fur' || c.key === 'fpp' || c.label.toLowerCase().includes('fecha') || c.label.toLowerCase().includes('proyeccion');
+      return (
+        <div key={c.key}>
+          <label className="label">{c.label}</label>
+          <input
+            className="input-field w-full"
+            type={esFecha ? 'date' : 'text'}
+            value={form[c.key] || ''}
+            onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))}
+            placeholder={esFecha ? '' : c.label}
+          />
+        </div>
+      );
+    })}
+  </div>
+)}
 
               <button
                 onClick={guardar}
@@ -553,12 +567,45 @@ export default function Seguimiento() {
   const [fichaAbierta, setFichaAbierta]   = useState(null);
   const [cargandoFicha, setCargandoFicha] = useState(false);
 
+  // Hoja seleccionada para ver pacientes
+  const [hojaVista, setHojaVista]         = useState(null);
+  const [pacientesHoja, setPacientesHoja] = useState([]);
+  const [loadingHoja, setLoadingHoja]     = useState(false);
+  const [errorHoja, setErrorHoja]         = useState('');
+
   useEffect(() => {
     apiFetch('/api/seguimiento/hojas')
       .then(data => setHojas(Array.isArray(data) ? data : []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const verPacientesHoja = async (hoja) => {
+    setHojaVista(hoja);
+    setLoadingHoja(true);
+    setErrorHoja('');
+    setPacientesHoja([]);
+    setTab('hojas');
+    try {
+      const data = await apiFetch(`/api/seguimiento/${encodeURIComponent(hoja.nombre)}`);
+      const schema = await apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hoja.nombre)}`);
+      const colNombre = schema?.colsFijas?.find(c => c.key === 'nombres')?.col ?? 6;
+      const colDni    = schema?.colsFijas?.find(c => c.key === 'dni')?.col    ?? 10;
+      const pacs = (data.registros || []).map(reg => {
+        const fila = reg.valores || [];
+        return {
+          id:      reg.id,
+          nombres: (fila[colNombre] || '').trim(),
+          dni:     (fila[colDni]    || '').trim(),
+          hoja:    hoja.nombre,
+          valores: fila,
+          sesiones: {},
+        };
+      }).filter(p => p.nombres || p.dni);
+      setPacientesHoja(pacs);
+    } catch (e) { setErrorHoja(e.message); }
+    finally { setLoadingHoja(false); }
+  };
 
   const buscar = async () => {
     if (!query.trim()) return;
@@ -570,14 +617,21 @@ export default function Seguimiento() {
     finally { setBuscando(false); }
   };
 
-  const abrirFicha = async (paciente, hoja) => {
-    setCargandoFicha(true);
-    try {
-      const schema = await apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hoja)}`);
-      setFichaAbierta({ paciente, hoja, schema: schema.tieneSchema ? schema : null });
-    } catch { setFichaAbierta({ paciente, hoja, schema: null }); }
-    finally { setCargandoFicha(false); }
-  };
+const abrirFicha = async (paciente, hoja) => {
+  setCargandoFicha(true);
+  try {
+    const schema = await apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hoja)}`);
+    // Si el paciente tiene DNI, cargar ficha completa desde el backend
+    let pacienteCompleto = paciente;
+    if (paciente.dni) {
+      try {
+        pacienteCompleto = await apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}/paciente/${paciente.dni}`);
+      } catch {}
+    }
+    setFichaAbierta({ paciente: pacienteCompleto, hoja, schema: schema.tieneSchema ? schema : null });
+  } catch { setFichaAbierta({ paciente, hoja, schema: null }); }
+  finally { setCargandoFicha(false); }
+};
 
   const recargarFicha = async () => {
     if (!fichaAbierta) return;
@@ -619,7 +673,63 @@ export default function Seguimiento() {
           <div className="flex justify-center py-20">
             <div className="w-12 h-12 border-4 border-rosa-200 border-t-rosa-500 rounded-full animate-spin" />
           </div>
+        ) : hojaVista ? (
+          // ── Vista de pacientes de una hoja ─────────────────────────────
+          <div className="space-y-3">
+            {/* Header hoja */}
+            <div className={`rounded-2xl bg-gradient-to-r ${colorHoja(hojaVista.nombre).bg} p-4 text-white flex items-center justify-between`}>
+              <div>
+                <p className="text-xs opacity-75 font-semibold">Programa</p>
+                <p className="font-extrabold text-lg" style={{ fontFamily: 'Poppins, sans-serif' }}>{hojaVista.nombre}</p>
+                {!loadingHoja && <p className="text-xs opacity-80 mt-0.5">{pacientesHoja.length} paciente(s) registrado(s)</p>}
+              </div>
+              <button onClick={() => { setHojaVista(null); setPacientesHoja([]); }} className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
+                ← Volver
+              </button>
+            </div>
+
+            {loadingHoja && (
+              <div className="flex justify-center py-10">
+                <div className="w-10 h-10 border-4 border-rosa-200 border-t-rosa-500 rounded-full animate-spin" />
+              </div>
+            )}
+
+            {errorHoja && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">⚠️ {errorHoja}</div>
+            )}
+
+            {!loadingHoja && pacientesHoja.length === 0 && !errorHoja && (
+              <div className="card text-center py-12 text-gray-400">
+                <p className="text-3xl mb-2">🗂️</p>
+                <p className="text-sm font-semibold">No hay pacientes en este programa todavía</p>
+                <button onClick={() => setTab('nuevo')} className="mt-3 btn-rosa text-xs">+ Agregar primer registro</button>
+              </div>
+            )}
+
+            {!loadingHoja && pacientesHoja.length > 0 && (
+              <div className="space-y-2">
+                {pacientesHoja.map((pac, i) => {
+                  const c = colorHoja(pac.hoja);
+                  return (
+                    <button key={i} onClick={() => abrirFicha(pac, pac.hoja)} className="card w-full text-left hover:shadow-md transition-all group">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${c.bg} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                          {(pac.nombres || '?').charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-800 text-sm truncate">{pac.nombres || '—'}</p>
+                          <p className="text-xs text-gray-500">{pac.dni}</p>
+                        </div>
+                        <span className="text-gray-300 group-hover:text-gray-500 text-sm">→</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : (
+          // ── Lista de hojas ─────────────────────────────────────────────
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {hojas.filter(h => HOJAS_SOLO_LECTURA.includes(h.nombre)).map(h => (
@@ -638,7 +748,7 @@ export default function Seguimiento() {
                 return (
                   <button
                     key={h.id}
-                    onClick={() => { setQuery(''); setTab('buscar'); }}
+                    onClick={() => verPacientesHoja(h)}
                     className="card text-left hover:shadow-md transition-all group"
                   >
                     <div className="flex items-center gap-3">

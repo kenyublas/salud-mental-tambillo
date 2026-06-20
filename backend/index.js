@@ -287,23 +287,18 @@ app.get('/api/dni/:numero', async (req, res) => {
             const m = f.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
             return m ? `${m[3]}-${m[2]}-${m[1]}` : f;
           };
-return res.json({
-  fuente:          'sheets',
-  nombres:         obj.nombres         || '',
-  fechaNacimiento: convertirFecha(obj.fechaNacimiento) || '',
-  edad:            obj.edad            || '',
-  sexo:            obj.sexo            || '',
-  sector:          obj.sector          || '',
-  sectorista:      obj.sectorista      || '',
-  celular:         obj.celular         || '',
-  seguro:          obj.seguro          || '',
-  hcl:             obj.hcl             || '',
-  // Campos adicionales para Seguimiento
-  apoderado:       obj.apoderado       || '',
-  diagnostico:     obj.diagnostico     || '',
-  tamizaje:        obj.tamizaje        || '',
-  direccion:       obj.motivoConsulta  || '',
-});
+          return res.json({
+            fuente:          'sheets',
+            nombres:         obj.nombres                        || '',
+            fechaNacimiento: convertirFecha(obj.fechaNacimiento) || '',
+            edad:            obj.edad                           || '',
+            sexo:            obj.sexo                           || '',
+            sector:          obj.sector                         || '',
+            sectorista:      obj.sectorista                     || '',
+            celular:         obj.celular                        || '',
+            seguro:          obj.seguro                         || '',
+            hcl:             obj.hcl                            || '',
+          });
         }
       } catch (e) {
         continue;
@@ -1225,282 +1220,8 @@ const SCHEMA_SEGUIMIENTO = {
       { key: 'observacion', col: 27, label: 'OBSERVACIÓN' },
     ],
   },
-  'FAMILIAS FUERTES': {
-    titulo: 'TALLER EN PREVENCIÓN DE CONDUCTA DE RIESGO EN ADOLESCENTES Y SUS FAMILIAS',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'apoderado',     col: 14, label: 'APODERADO O FAMILIAR' },
-      { key: 'celular',       col: 15, label: 'CELULAR' },
-      { key: 'tamizaje',      col: 16, label: 'TAMIZAJE' },
-      { key: 'diagnostico',   col: 17, label: 'DIAGNÓSTICO' },
-    ],
-    gruposSesiones: [
-      { key: 'taller', col: 18, sesiones: 7, label: 'TALLER FAMILIAS FUERTES (7 sesiones)' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 25, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 26, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 27, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 28, label: 'OBSERVACIÓN' },
-    ],
-  },
-
-  'SS. HH.SS ADOLESCENTES': {
-    titulo: 'HABILIDADES SOCIALES ADOLESCENTES',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'institucion',   col: 14, label: 'INSTITUCIÓN EDUCATIVA' },
-      { key: 'apoderado',     col: 15, label: 'APODERADO O FAMILIAR' },
-      { key: 'celular',       col: 16, label: 'CELULAR' },
-      { key: 'sectorista',    col: 17, label: 'SECTORISTA' },
-      { key: 'cuestionario',  col: 18, label: 'APLICACIÓN CUESTIONARIO HH.SS' },
-      { key: 'consejeria',    col: 19, label: 'CONSEJERÍA EN HH.SS' },
-      { key: 'diagnostico',   col: 20, label: 'DIAGNÓSTICO (Z734)' },
-    ],
-    gruposSesiones: [
-      { key: 'sesionesHHSS', col: 21, sesiones: 10, label: 'SESIONES HH.SS (Z734)' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 31, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 32, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 33, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 34, label: 'OBSERVACIÓN' },
-    ],
-  },
-
-  'PRIMEROS AUX. PSICOLOGICOS': {
-    titulo: 'PRIMEROS AUXILIOS PSICOLÓGICOS',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'institucion',   col: 14, label: 'INSTITUCIÓN EDUCATIVA' },
-      { key: 'apoderado',     col: 15, label: 'APODERADO O FAMILIAR' },
-      { key: 'celular',       col: 16, label: 'CELULAR' },
-      { key: 'sectorista',    col: 17, label: 'SECTORISTA' },
-      { key: 'tamizaje',      col: 18, label: 'APLICACIÓN DE TAMIZAJE' },
-      { key: 'diagnostico',   col: 19, label: 'DIAGNÓSTICO (CIE-10)' },
-    ],
-    gruposSesiones: [
-      { key: 'primerosAuxilios', col: 20, sesiones: 4, label: 'PRIMEROS AUXILIOS PSICOLÓGICOS (99207.08)' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 24, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 25, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 26, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 27, label: 'OBSERVACIÓN' },
-    ],
-  },
-
-  'SS. HH.SS NIÑOS': {
-    titulo: 'HABILIDADES SOCIALES NIÑOS',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'institucion',   col: 14, label: 'INSTITUCIÓN EDUCATIVA' },
-      { key: 'apoderado',     col: 15, label: 'APODERADO O FAMILIAR' },
-      { key: 'celular',       col: 16, label: 'CELULAR' },
-      { key: 'sectorista',    col: 17, label: 'SECTORISTA' },
-      { key: 'cuestionario',  col: 18, label: 'APLICACIÓN CUESTIONARIO HH.SS' },
-      { key: 'consejeria',    col: 19, label: 'CONSEJERÍA EN HH.SS' },
-      { key: 'diagnostico',   col: 20, label: 'DIAGNÓSTICO (Z734)' },
-    ],
-    gruposSesiones: [
-      { key: 'sesionesHHSS', col: 21, sesiones: 10, label: 'SESIONES HH.SS NIÑOS (Z734)' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 31, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 32, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 33, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 34, label: 'OBSERVACIÓN' },
-    ],
-  },
-
-  'MADRES Y PADRES CUIDADORES': {
-    titulo: 'MADRES Y PADRES CUIDADORES',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES DEL NIÑO(A)' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'apoderado',     col: 14, label: 'NOMBRE DEL APODERADO O FAMILIAR' },
-      { key: 'dniApoderado',  col: 15, label: 'DNI APODERADO' },
-      { key: 'celular',       col: 16, label: 'CELULAR' },
-      { key: 'sectorista',    col: 17, label: 'SECTORISTA' },
-    ],
-    gruposSesiones: [
-      { key: 'visitasFamiliares', col: 18, sesiones: 3, label: 'VISITAS FAMILIARES / CONSEJERÍA Y PAUTAS DE CRIANZA (C0011)' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 21, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 22, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 23, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 24, label: 'OBSERVACIÓN' },
-    ],
-  },
-
-  'PAREJAS CONSEJERIA': {
-    titulo: 'CONSEJERÍA EN CONVIVENCIA SALUDABLE EN PAREJA',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'apoderado',     col: 14, label: 'APODERADO O FAMILIAR' },
-      { key: 'celular',       col: 15, label: 'CELULAR' },
-      { key: 'sectorista',    col: 16, label: 'SECTORISTA' },
-    ],
-    gruposSesiones: [
-      { key: 'reunionComunidad',      col: 17, sesiones: 2, label: 'REUNIÓN CON COMUNIDAD (C0003)' },
-      { key: 'tallerIndividual',      col: 19, sesiones: 4, label: 'TALLER CONSEJERÍA PAREJA - INDIVIDUAL' },
-      { key: 'tallerGrupal',          col: 23, sesiones: 4, label: 'TALLER CONSEJERÍA PAREJA - GRUPAL' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 27, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 28, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 29, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 30, label: 'OBSERVACIÓN' },
-    ],
-  },
-
-  'LIDERES ADOLESCENTES': {
-    titulo: 'LÍDERES ADOLESCENTES - PROMOCIÓN DEL BUEN TRATO',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'institucion',   col: 14, label: 'INSTITUCIÓN EDUCATIVA' },
-      { key: 'apoderado',     col: 15, label: 'APODERADO O FAMILIAR' },
-      { key: 'celular',       col: 16, label: 'CELULAR' },
-    ],
-    gruposSesiones: [
-      { key: 'coordinacionIE',    col: 17, sesiones: 2, label: 'COORDINACIÓN CON IE (C0002)' },
-      { key: 'reunionDocentes',   col: 19, sesiones: 2, label: 'REUNIÓN INDUCCIÓN DOCENTES (C0005)' },
-      { key: 'tallerLideres',     col: 21, sesiones: 2, label: 'TALLER CAPACITACIÓN LÍDERES' },
-      { key: 'reunionMonitoreo',  col: 23, sesiones: 2, label: 'REUNIÓN MONITOREO (C7001)' },
-      { key: 'reunionEvaluacion', col: 25, sesiones: 2, label: 'REUNIÓN EVALUACIÓN (C7003)' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 27, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 28, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 29, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 30, label: 'OBSERVACIÓN' },
-    ],
-  },
-
-  'AGENTES COMUNITARIOS': {
-    titulo: 'AGENTES COMUNITARIOS - VIGILANCIA COMUNITARIA',
-    colsFijas: [
-      { key: 'producto',      col: 0,  label: 'PRODUCTO' },
-      { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
-      { key: 'subproducto',   col: 2,  label: 'SUBPRODUCTO' },
-      { key: 'numero',        col: 3,  label: 'N°' },
-      { key: 'psicologo',     col: 4,  label: 'NOMBRE DEL PSICÓLOGO(A)' },
-      { key: 'fechaAtencion', col: 5,  label: 'FECHA DE ATENCIÓN' },
-      { key: 'nombres',       col: 6,  label: 'APELLIDOS Y NOMBRES' },
-      { key: 'edad',          col: 7,  label: 'EDAD' },
-      { key: 'sexo',          col: 8,  label: 'SEXO' },
-      { key: 'fechaNac',      col: 9,  label: 'FECHA DE NACIMIENTO' },
-      { key: 'dni',           col: 10, label: 'DNI' },
-      { key: 'hcl',           col: 11, label: 'HISTORIA CLÍNICA' },
-      { key: 'sector',        col: 12, label: 'SECTOR' },
-      { key: 'direccion',     col: 13, label: 'DIRECCIÓN' },
-      { key: 'apoderado',     col: 14, label: 'APODERADO O FAMILIAR' },
-      { key: 'celular',       col: 15, label: 'CELULAR' },
-    ],
-    gruposSesiones: [
-      { key: 'reunionIncidencia', col: 16, sesiones: 1, label: 'REUNIÓN INCIDENCIA ORGANIZACIONES COMUNITARIAS' },
-      { key: 'tallerMujeres',     col: 17, sesiones: 4, label: 'TALLER CAPACITACIÓN MUJERES ORGANIZACIONES' },
-      { key: 'monitoreo',         col: 21, sesiones: 4, label: 'MONITOREO VIGILANCIA COMUNITARIA' },
-    ],
-    colsMeta: [
-      { key: 'condicion',   col: 25, label: 'CONDICIÓN' },
-      { key: 'proyeccion',  col: 26, label: 'PROYECCIÓN MES A DAR TA' },
-      { key: 'referido',    col: 27, label: 'REFERIDO LUGAR Y FECHA' },
-      { key: 'observacion', col: 28, label: 'OBSERVACIÓN' },
-    ],
-  },
 };
+
 
 
 // ─── HELPER: leer hoja de seguimiento con schema ──────────────────────────
@@ -1562,8 +1283,7 @@ function filaAPaciente(fila, rowNum, schema, hoja) {
   return paciente;
 }
 
-// GET /api/seguimiento/schema/:hoja — devuelve el schema de una hoja
-// GET /api/seguimiento/hojas
+// GET /api/seguimiento/hojas — lista todas las hojas
 app.get('/api/seguimiento/hojas', async (req, res) => {
   try {
     const sheets = await getSheets();
@@ -1578,6 +1298,8 @@ app.get('/api/seguimiento/hojas', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// GET /api/seguimiento/schema/:hoja — devuelve el schema de una hoja
 app.get('/api/seguimiento/schema/:hoja', (req, res) => {
   const hoja = decodeURIComponent(req.params.hoja);
   const schema = SCHEMA_SEGUIMIENTO[hoja];
@@ -1642,6 +1364,36 @@ app.get('/api/seguimiento/:hoja/paciente/:dni', async (req, res) => {
 
     res.json(filaAPaciente(encontrado.fila, encontrado.rowNum, schema, hoja));
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/seguimiento/:hoja — lista pacientes de una hoja
+app.get('/api/seguimiento/:hoja', async (req, res) => {
+  const hoja = decodeURIComponent(req.params.hoja);
+  try {
+    const sheets  = await getSheets();
+    const allRows = await leerHojaSeguimiento(sheets, hoja);
+    if (!allRows.length) return res.json({ encabezados: [], registros: [], total: 0 });
+
+    // Fila 3 (índice 2) = encabezados
+    // Fila 4 (índice 3) = subencabezados numéricos
+    // Fila 5+ (índice 4+) = datos reales
+    const encabezados = (allRows[2] || []).filter(h => (h || '').trim());
+    const DATA_START  = 4;
+
+    const registros = allRows.slice(DATA_START)
+      .map((fila, i) => ({ id: DATA_START + i + 1, valores: fila }))
+      .filter(({ valores }) =>
+        valores.some(v => {
+          const s = (v || '').trim();
+          return s && isNaN(s) && s.length > 1;
+        })
+      );
+
+    res.json({ encabezados, registros, total: registros.length });
+  } catch (error) {
+    console.error(`[GET /api/seguimiento/${hoja}] ERROR:`, error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1791,22 +1543,57 @@ function colToLetter(col) {
   }
   return letter;
 }
-// GET /api/seguimiento/:hoja — endpoint genérico (compatibilidad)
-app.get('/api/seguimiento/:hoja', async (req, res) => {
-  const hoja = decodeURIComponent(req.params.hoja);
+
+
+// ─── ENDPOINT CLAUDE (Dr. Mind) ───────────────────────────────────────────
+// POST /api/gemini
+app.post('/api/gemini', async (req, res) => {
+  const { mensaje, historial, contexto } = req.body;
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY no configurado.' });
+  }
+
   try {
-    const sheets = await getSheets();
-    const allRows = await leerHojaSeguimiento(sheets, hoja);
-    const schema = SCHEMA_SEGUIMIENTO[hoja];
-    const pacientes = parsearPacientes(allRows, schema);
-    const registros = pacientes.map(({ fila, rowNum }) => 
-      filaAPaciente(fila, rowNum, schema, hoja)
-    );
-    res.json({ registros, total: registros.length });
+    const messages = [];
+    if (historial && historial.length > 0) {
+      historial.forEach(h => {
+        messages.push({ role: h.rol === 'user' ? 'user' : 'assistant', content: h.texto });
+      });
+    }
+    messages.push({ role: 'user', content: mensaje });
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        system: `Eres Dr. Mind, asistente IA de la Lic. Janeth Karina Santa Cruz Espíritu, psicóloga del Centro de Salud Tambillo-Umari, Huánuco, Perú. Ayúdala con sus pacientes, citas, estadísticas y diagnósticos CIE-10. Responde siempre en español, sé conciso (máximo 3-4 oraciones), usa emojis ocasionalmente. CONTEXTO ACTUAL: ${contexto || 'Sin contexto disponible'}`,
+        messages,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `Error ${response.status}`);
+    }
+
+    const data = await response.json();
+    const texto = data.content?.[0]?.text || 'Lo siento, no pude generar una respuesta.';
+    res.json({ respuesta: texto });
+
   } catch (error) {
+    console.error('[POST /api/gemini] ERROR:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`✅ Backend corriendo en http://localhost:${PORT}`));

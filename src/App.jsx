@@ -8,6 +8,7 @@ import Seguimiento from './pages/Seguimiento';
 import { Gestantes, Referencias, AppsSM } from './pages/OtrasPaginas';
 import Login from './pages/Login';
 import { isLoggedIn, getUsuario, logout } from './utils/auth';
+import CerebroFlotante from './components/CerebroFlotante';
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="*"            element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+        <CerebroFlotante />
       </div>
     </BrowserRouter>
   );

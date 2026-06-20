@@ -2,11 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CAMPOS_RUA, CIE10, TAMIZAJES } from '../data/cie10';
 import { crearRegistro, editarRegistro, obtenerRegistros, obtenerMesActual, buscarDNI } from '../utils/sheets';
-import BotFlotante from '../components/BotFlotante';
-import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
 
 // ─── TamizajeMultiInput ──────────────────────────────────────────────────────
-function TamizajeMultiInput({ value, onChange, isActivo }) {
+function TamizajeMultiInput({ value, onChange }) {
   const [inputVal, setInputVal] = useState('');
   const chips = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
 
@@ -23,7 +21,6 @@ function TamizajeMultiInput({ value, onChange, isActivo }) {
   };
 
   const disponibles = TAMIZAJES.filter(t => !chips.includes(t));
-  const base = `input-field ${isActivo ? 'ring-2 ring-rosa-400 border-rosa-300' : ''}`;
 
   return (
     <div className="space-y-2">
@@ -39,45 +36,42 @@ function TamizajeMultiInput({ value, onChange, isActivo }) {
       )}
       <div className="flex gap-2">
         {disponibles.length > 0 && (
-          <select className={`${base} flex-1`} value="" onChange={e => { if (e.target.value) agregar(e.target.value); }}>
+          <select className="input-field flex-1" value="" onChange={e => { if (e.target.value) agregar(e.target.value); }}>
             <option value="">Seleccionar código...</option>
             {disponibles.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         )}
         <input
-          className={`${base} flex-1`}
+          className="input-field flex-1"
           value={inputVal}
           onChange={e => setInputVal(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); agregar(inputVal); } }}
           placeholder="Otro código o separados por coma..."
           autoComplete="off"
         />
-        <button
-          type="button"
-          onClick={() => agregar(inputVal)}
-          disabled={!inputVal.trim()}
-          className="px-3 py-2 bg-rosa-500 hover:bg-rosa-600 text-white text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-40 flex-shrink-0"
-        >Agregar</button>
+        <button type="button" onClick={() => agregar(inputVal)} disabled={!inputVal.trim()}
+          className="px-3 py-2 bg-rosa-500 hover:bg-rosa-600 text-white text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-40 flex-shrink-0">
+          Agregar
+        </button>
       </div>
     </div>
   );
 }
 
 // ─── InputField ──────────────────────────────────────────────────────────────
-function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusquedaCIE, mostrarCIE, setMostrarCIE, buscandoDNI, dniEstado }) {
-  const base = `input-field ${isActivo ? 'ring-2 ring-rosa-400 border-rosa-300' : ''}`;
+function InputField({ campo, value, onChange, busquedaCIE, setBusquedaCIE, mostrarCIE, setMostrarCIE, buscandoDNI, dniEstado }) {
+  const base = 'input-field';
 
   if (campo.key === 'profesional') {
     return <div className="input-field bg-gray-50 text-gray-500 select-none">Psicología</div>;
   }
 
-  // ── Campo DNI con autocomplete ──────────────────────────────────────────
   if (campo.key === 'dni') {
     const iconoEstado = {
-      'ok-sheets':      { icon: '✅', text: 'Encontrado en registros', color: 'text-green-600 bg-green-50 border-green-200' },
-      'ok-api':         { icon: '🔍', text: 'Encontrado en RENIEC',    color: 'text-blue-600 bg-blue-50 border-blue-200' },
-      'no-encontrado':  { icon: '⚠️', text: 'DNI no encontrado — ingresa los datos manualmente', color: 'text-amber-600 bg-amber-50 border-amber-200' },
-      'error':          { icon: '❌', text: 'Error al buscar — ingresa los datos manualmente',   color: 'text-red-600 bg-red-50 border-red-200' },
+      'ok-sheets':     { icon: '✅', text: 'Encontrado en registros',                         color: 'text-green-600 bg-green-50 border-green-200' },
+      'ok-api':        { icon: '🔍', text: 'Encontrado en RENIEC',                             color: 'text-blue-600 bg-blue-50 border-blue-200'   },
+      'no-encontrado': { icon: '⚠️', text: 'DNI no encontrado — ingresa los datos manualmente', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+      'error':         { icon: '❌', text: 'Error al buscar — ingresa los datos manualmente',   color: 'text-red-600 bg-red-50 border-red-200'       },
     }[dniEstado];
 
     return (
@@ -85,24 +79,20 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
         <div className="relative">
           <input
             className={`${base} pr-10`}
-            type="text"
-            inputMode="numeric"
-            maxLength={8}
+            type="text" inputMode="numeric" maxLength={8}
             value={value}
             onChange={e => onChange(campo.key, e.target.value.replace(/\D/g, ''))}
             placeholder="Ingresa el DNI (8 dígitos)..."
             autoComplete="off"
           />
-          {/* Indicador de búsqueda */}
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             {buscandoDNI ? (
               <div className="w-4 h-4 border-2 border-rosa-300 border-t-rosa-600 rounded-full animate-spin" />
-            ) : dniEstado === 'ok-sheets' || dniEstado === 'ok-api' ? (
+            ) : (dniEstado === 'ok-sheets' || dniEstado === 'ok-api') ? (
               <span className="text-green-500 text-sm">✓</span>
             ) : null}
           </div>
         </div>
-        {/* Badge de estado */}
         {iconoEstado && (
           <div className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border ${iconoEstado.color}`}>
             <span>{iconoEstado.icon}</span>
@@ -110,6 +100,22 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
           </div>
         )}
       </div>
+    );
+  }
+
+  if (campo.key === 'sector') {
+    return (
+      <>
+        <input className={base} list="lista-sectores" value={value}
+          onChange={e => onChange(campo.key, e.target.value)}
+          placeholder="Escribe o selecciona un sector..." autoComplete="off" />
+        <datalist id="lista-sectores">
+          {['PINQUIRAY','LA PUNTA','CASA BLANCA','HUANIN','GOYAR PUNTA',
+            'AURAGSHAY','CRUZ PUNTA','TAMBILLO','PANAOCOCHA','SHALLA',
+            'SAN MARCOS','CHACHASPATA','RAMOS CURVA'
+          ].map(s => <option key={s} value={s} />)}
+        </datalist>
+      </>
     );
   }
 
@@ -124,13 +130,14 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
 
   if (campo.type === 'textarea') {
     return (
-      <textarea className={base} rows={2} value={value} onChange={e => onChange(campo.key, e.target.value)}
+      <textarea className={base} rows={2} value={value}
+        onChange={e => onChange(campo.key, e.target.value)}
         placeholder={`Ingrese ${campo.label.toLowerCase()}...`} />
     );
   }
 
   if (campo.type === 'tamizaje-multi') {
-    return <TamizajeMultiInput value={value} onChange={(newVal) => onChange(campo.key, newVal)} isActivo={isActivo} />;
+    return <TamizajeMultiInput value={value} onChange={(newVal) => onChange(campo.key, newVal)} />;
   }
 
   if (campo.type === 'cie10') {
@@ -141,21 +148,16 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
 
     return (
       <div className="relative">
-        <input
-          className={base}
-          value={value}
+        <input className={base} value={value}
           onChange={e => { onChange(campo.key, e.target.value); setBusquedaCIE(e.target.value); setMostrarCIE(true); }}
           onFocus={() => setMostrarCIE(true)}
-          placeholder="Ej: F41.9 o ansiedad..."
-          autoComplete="off"
-        />
+          placeholder="Ej: F41.9 o ansiedad..." autoComplete="off" />
         {mostrarCIE && busquedaCIE && cieFiltrado.length > 0 && (
           <div className="absolute top-full left-0 right-0 z-20 bg-white border border-rosa-200 rounded-xl shadow-lg mt-1 max-h-44 overflow-y-auto">
             {cieFiltrado.map(c => (
               <button key={c.code} type="button"
                 className="w-full text-left px-3 py-2 text-xs hover:bg-rosa-50 flex gap-2 items-start border-b border-gray-50"
-                onMouseDown={e => { e.preventDefault(); onChange(campo.key, c.code); setMostrarCIE(false); setBusquedaCIE(''); }}
-              >
+                onMouseDown={e => { e.preventDefault(); onChange(campo.key, c.code); setMostrarCIE(false); setBusquedaCIE(''); }}>
                 <span className="font-bold text-rosa-600 flex-shrink-0 w-14">{c.code}</span>
                 <span className="text-gray-600">{c.desc}</span>
               </button>
@@ -167,14 +169,12 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
   }
 
   return (
-    <input
-      className={base}
+    <input className={base}
       type={campo.type === 'date' ? 'date' : campo.type === 'number' ? 'number' : 'text'}
       value={value}
       onChange={e => onChange(campo.key, e.target.value)}
       placeholder={campo.type === 'date' ? '' : `Ingrese ${campo.label.toLowerCase()}...`}
-      autoComplete="off"
-    />
+      autoComplete="off" />
   );
 }
 
@@ -182,8 +182,8 @@ function InputField({ campo, value, onChange, isActivo, busquedaCIE, setBusqueda
 export default function Registro() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const editarId  = searchParams.get('editar');
-  const editarMes = searchParams.get('mes');
+  const editarId    = searchParams.get('editar');
+  const editarMes   = searchParams.get('mes');
   const modoEdicion = Boolean(editarId && editarMes);
 
   const [form, setForm] = useState({
@@ -191,23 +191,21 @@ export default function Registro() {
     profesional: 'Psicología',
     responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
   });
-  const [guardando, setGuardando]     = useState(false);
-  const [guardado, setGuardado]       = useState(false);
-  const [error, setError]             = useState('');
-  const [busquedaCIE, setBusquedaCIE] = useState('');
-  const [mostrarCIE, setMostrarCIE]   = useState(false);
+  const [guardando, setGuardando]         = useState(false);
+  const [guardado, setGuardado]           = useState(false);
+  const [error, setError]                 = useState('');
+  const [busquedaCIE, setBusquedaCIE]     = useState('');
+  const [mostrarCIE, setMostrarCIE]       = useState(false);
   const [cargandoDatos, setCargandoDatos] = useState(modoEdicion);
-  const [errorCarga, setErrorCarga]   = useState('');
-  const [confirmGuardar, setConfirmGuardar] = useState(false);
-  const [formDirty, setFormDirty]     = useState(false);
+  const [errorCarga, setErrorCarga]       = useState('');
+  const [confirmGuardar, setConfirmGuardar]       = useState(false);
+  const [formDirty, setFormDirty]                 = useState(false);
   const [mostrarModalSalir, setMostrarModalSalir] = useState(false);
   const [pendingNavPath, setPendingNavPath]        = useState(null);
+  const [buscandoDNI, setBuscandoDNI]     = useState(false);
+  const [dniEstado, setDniEstado]         = useState('');
 
-  // ── DNI autocomplete ──────────────────────────────────────────────────────
-  const [buscandoDNI, setBuscandoDNI] = useState(false);
-  const [dniEstado, setDniEstado]     = useState('');
-
-  // ── Carga en modo edición ─────────────────────────────────────────────────
+  // Carga en modo edición
   useEffect(() => {
     if (!modoEdicion) return;
     setCargandoDatos(true);
@@ -231,7 +229,7 @@ export default function Registro() {
       .finally(() => setCargandoDatos(false));
   }, [modoEdicion, editarId, editarMes]);
 
-  // ── Guardia de navegación ─────────────────────────────────────────────────
+  // Guardia de navegación
   useEffect(() => {
     if (!formDirty || guardado) return;
     const handler = (e) => {
@@ -263,28 +261,21 @@ export default function Registro() {
     }
   }, [formDirty, guardado, navigate]);
 
-  const esGestante      = form.gestante === 'G' || form.gestante === 'P';
-  const esMenor         = parseInt(form.edad) < 18;
+  const esGestante       = form.gestante === 'G' || form.gestante === 'P';
+  const esMenor          = parseInt(form.edad) < 18;
   const tamizajePositivo = form.resultadoTamizaje === 'Positivo';
 
-  // set() genérico — marca form como sucio
-  const set = (key, val) => {
-    setForm(f => ({ ...f, [key]: val }));
-    setFormDirty(true);
-  };
+  const set = (key, val) => { setForm(f => ({ ...f, [key]: val })); setFormDirty(true); };
 
-  // ── Manejo especial del DNI ───────────────────────────────────────────────
   const handleDNIChange = async (val) => {
     set('dni', val);
     setDniEstado('');
     if (val.length !== 8 || !/^\d{8}$/.test(val)) return;
-
     setBuscandoDNI(true);
     try {
       const data = await buscarDNI(val);
       setForm(f => ({
-        ...f,
-        dni:             val,
+        ...f, dni: val,
         nombres:         data.nombres         || f.nombres,
         fechaNacimiento: data.fechaNacimiento  || f.fechaNacimiento,
         edad:            data.edad             || f.edad,
@@ -311,27 +302,15 @@ export default function Registro() {
     return true;
   });
 
-  const { activo, pausado, escuchando, procesando, campoActual, mensajeBot, toggle } =
-    useVoiceAssistant({
-      onDatosActualizados: (d) => { setForm(f => ({ ...f, ...d })); setFormDirty(true); },
-      onGuardar: (d) => handleGuardar(d),
-      camposVisibles,
-      datosIniciales: form,
-    });
-
-  // ── Guardado ──────────────────────────────────────────────────────────────
   const handleGuardar = async (datosExtra = {}) => {
     const mesDestino = modoEdicion ? editarMes : obtenerMesActual();
     const payload = { ...form, ...datosExtra, mes: mesDestino };
     if (!payload.nombres || !payload.dni) { setError('Nombres y DNI son obligatorios.'); return; }
-    setGuardando(true);
-    setError('');
+    setGuardando(true); setError('');
     try {
       if (modoEdicion) await editarRegistro(editarId, payload);
       else             await crearRegistro(payload);
-      setFormDirty(false);
-      setPendingNavPath(null);
-      setGuardado(true);
+      setFormDirty(false); setPendingNavPath(null); setGuardado(true);
       setTimeout(() => {
         setGuardado(false);
         if (modoEdicion) navigate('/pacientes');
@@ -350,18 +329,17 @@ export default function Registro() {
 
   const pedirConfirmacionGuardar = () => {
     if (!form.nombres || !form.dni) { setError('Nombres y DNI son obligatorios.'); return; }
-    setError('');
-    setConfirmGuardar(true);
+    setError(''); setConfirmGuardar(true);
   };
 
   const secciones = [
-    { titulo: '📅 Datos de Atención',            campos: ['fechaAtencion','profesional','responsableAtencion','tipoAtencion'] },
-    { titulo: '👤 Datos del Paciente',            campos: ['apoderado','nombres','dni','fechaNacimiento','edad','sexo'] },
-    { titulo: '🤰 Gestante / Puérpera',           campos: ['gestante','fur','semanaGestacional','fechaProbableParto'] },
-    { titulo: '📍 Ubicación',                     campos: ['hcl','sector','sectorista','seguro','celular'] },
-    { titulo: '🩺 Consulta y Diagnóstico',        campos: ['motivoConsulta','tamizaje','resultadoTamizaje','diagnostico'] },
-    { titulo: '📋 Seguimiento',                   campos: ['segundoControl','intervencion','fechaProxCita','terminoAtencion','referencia','contrarreferencia'] },
-    { titulo: '⚙️ Actividades Complementarias',  campos: ['valoracionRiesgo','sesionMovilizacion','visitaDomiciliaria','medicamentos','teleorientacion','promsa','campana','observaciones'] },
+    { titulo: '📅 Datos de Atención',           campos: ['fechaAtencion','profesional','responsableAtencion','tipoAtencion'] },
+    { titulo: '👤 Datos del Paciente',           campos: ['apoderado','nombres','dni','fechaNacimiento','edad','sexo'] },
+    { titulo: '🤰 Gestante / Puérpera',          campos: ['gestante','fur','semanaGestacional','fechaProbableParto'] },
+    { titulo: '📍 Ubicación',                    campos: ['hcl','sector','sectorista','seguro','celular'] },
+    { titulo: '🩺 Consulta y Diagnóstico',       campos: ['motivoConsulta','tamizaje','resultadoTamizaje','diagnostico'] },
+    { titulo: '📋 Seguimiento',                  campos: ['segundoControl','intervencion','fechaProxCita','terminoAtencion','referencia','contrarreferencia'] },
+    { titulo: '⚙️ Actividades Complementarias', campos: ['valoracionRiesgo','sesionMovilizacion','visitaDomiciliaria','medicamentos','teleorientacion','promsa','campana','observaciones'] },
   ];
 
   if (cargandoDatos) return (
@@ -397,7 +375,6 @@ export default function Registro() {
           </div>
         </div>
 
-        {/* Alertas */}
         {guardado && (
           <div className="bounce-in bg-green-100 border border-green-300 text-green-800 rounded-xl px-4 py-3 mb-4 flex items-center gap-2 font-semibold text-sm">
             ✅ {modoEdicion ? 'Registro actualizado correctamente' : 'Registro guardado correctamente'}
@@ -414,17 +391,14 @@ export default function Registro() {
               .map(k => CAMPOS_RUA.find(c => c.key === k))
               .filter(c => c && camposVisibles.find(cv => cv.key === c.key));
             if (camposSec.length === 0) return null;
-
             return (
               <div key={sec.titulo} className="card fade-in-up">
                 <h3 className="section-title">{sec.titulo}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {camposSec.map(campo => (
-                    <div
-                      key={campo.key}
+                    <div key={campo.key}
                       className={campo.type === 'textarea' || campo.type === 'tamizaje-multi' || campo.key === 'nombres' || campo.key === 'motivoConsulta' ? 'sm:col-span-2' : ''}
-                      onClick={e => e.stopPropagation()}
-                    >
+                      onClick={e => e.stopPropagation()}>
                       <label className="label">
                         {campo.label}
                         {campo.required && <span className="text-rosa-500 ml-0.5">*</span>}
@@ -433,7 +407,6 @@ export default function Registro() {
                         campo={campo}
                         value={form[campo.key] || ''}
                         onChange={campo.key === 'dni' ? (_, val) => handleDNIChange(val) : set}
-                        isActivo={activo && camposVisibles[campoActual]?.key === campo.key}
                         busquedaCIE={busquedaCIE}
                         setBusquedaCIE={setBusquedaCIE}
                         mostrarCIE={mostrarCIE}
@@ -456,18 +429,12 @@ export default function Registro() {
             className="btn-rosa flex-1 flex items-center justify-center gap-2">
             {guardando ? (
               <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
               </svg>{modoEdicion ? 'Actualizando...' : 'Guardando...'}</>
             ) : modoEdicion ? '💾 Actualizar Registro' : '💾 Guardar Registro'}
           </button>
         </div>
-
-        {!modoEdicion && (
-          <BotFlotante activo={activo} pausado={pausado} escuchando={escuchando}
-            procesando={procesando} mensajeBot={mensajeBot} campoActual={campoActual}
-            campo={camposVisibles[campoActual]} onToggle={toggle} />
-        )}
       </div>
 
       {/* Modal confirmar guardar */}
@@ -522,8 +489,9 @@ export default function Registro() {
               </button>
               <button
                 onClick={() => { setMostrarModalSalir(false); setFormDirty(false); if (pendingNavPath === null) navigate(-1); else navigate(pendingNavPath); }}
-                className="w-full border-2 border-gray-200 text-gray-500 hover:bg-gray-50 font-semibold px-4 py-2 rounded-xl transition-all text-sm"
-              >Salir de todas formas</button>
+                className="w-full border-2 border-gray-200 text-gray-500 hover:bg-gray-50 font-semibold px-4 py-2 rounded-xl transition-all text-sm">
+                Salir de todas formas
+              </button>
             </div>
           </div>
         </div>
