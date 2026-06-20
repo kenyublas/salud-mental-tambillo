@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { obtenerRegistros, eliminarRegistro, buscarEnTodos, obtenerMesActual, MESES } from '../utils/sheets';
+import { obtenerRegistros, eliminarRegistro, buscarPacientes, obtenerMesActual, MESES } from '../utils/sheets';
 import { descargarPDF, imprimirPDF } from '../utils/pdf';
 
 // Valor centinela para el modo "todos los meses"

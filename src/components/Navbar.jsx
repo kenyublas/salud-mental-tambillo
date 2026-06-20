@@ -2,29 +2,41 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: '📊' },
-  { path: '/registro', label: 'Nuevo Registro', icon: '✏️' },
-  { path: '/pacientes', label: 'Pacientes', icon: '👥' },
-  { path: '/gestantes', label: 'Gestantes', icon: '🤰' },
-  { path: '/referencias', label: 'Referencias', icon: '📋' },
-  { path: '/apps', label: 'APPs SM', icon: '🏥' },
+  { path: '/',            label: 'Dashboard',      icon: '📊' },
+  { path: '/registro',   label: 'Nuevo Registro',  icon: '✏️' },
+  { path: '/pacientes',  label: 'Pacientes',        icon: '👥' },
+  { path: '/gestantes',  label: 'Gestantes',        icon: '🤰' },
+  { path: '/referencias',label: 'Referencias',      icon: '📋' },
+  { path: '/seguimiento',label: 'Seguimiento',      icon: '🗂️' },
+  { path: '/apps',       label: 'APPs SM',          icon: '🏥' },
 ];
 
-export default function Navbar() {
+export default function Navbar({ usuario, onLogout }) {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
+  const handleLogout = () => {
+    if (confirmLogout) {
+      onLogout();
+    } else {
+      setConfirmLogout(true);
+      setTimeout(() => setConfirmLogout(false), 3000);
+    }
+  };
 
   return (
     <>
       {/* TOP BAR */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-rosa-100 shadow-sm">
         <div className="flex items-center justify-between px-4 h-14">
+
           {/* Logo */}
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rosa-400 to-rosa-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
               🧠
             </div>
             <div>
-              <p className="text-xs font-extrabold text-gray-800 leading-none" style={{fontFamily:'Poppins,sans-serif'}}>
+              <p className="text-xs font-extrabold text-gray-800 leading-none" style={{ fontFamily: 'Poppins,sans-serif' }}>
                 Salud Mental
               </p>
               <p className="text-[10px] text-rosa-400 font-semibold leading-none">C.S. Tambillo</p>
@@ -52,15 +64,26 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* User info */}
+          {/* Usuario + logout desktop */}
           <div className="hidden md:flex items-center gap-2">
             <div className="text-right">
-              <p className="text-xs font-bold text-gray-700">Lic. Janeth</p>
+              <p className="text-xs font-bold text-gray-700">{usuario || 'Lic. Janeth'}</p>
               <p className="text-[10px] text-gray-400">Psicóloga</p>
             </div>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-celeste-300 to-celeste-500 flex items-center justify-center text-white text-sm font-bold">
-              J
+              {(usuario?.[0] || 'J').toUpperCase()}
             </div>
+            <button
+              onClick={handleLogout}
+              className={`ml-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
+                confirmLogout
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500'
+              }`}
+              title="Cerrar sesión"
+            >
+              {confirmLogout ? '¿Salir?' : '🚪'}
+            </button>
           </div>
 
           {/* Hamburger mobile */}
@@ -80,15 +103,31 @@ export default function Navbar() {
             className="absolute top-14 left-0 right-0 bg-white border-b border-rosa-100 shadow-lg p-4"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-rosa-100">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-celeste-300 to-celeste-500 flex items-center justify-center text-white font-bold">
-                J
+            {/* Usuario mobile */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-rosa-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-celeste-300 to-celeste-500 flex items-center justify-center text-white font-bold">
+                  {(usuario?.[0] || 'J').toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-800">{usuario || 'Lic. Janeth'}</p>
+                  <p className="text-xs text-gray-400">Psicóloga - C.S. Tambillo</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-gray-800">Lic. Janeth</p>
-                <p className="text-xs text-gray-400">Psicóloga - C.S. Tambillo</p>
-              </div>
+              {/* Botón logout mobile */}
+              <button
+                onClick={handleLogout}
+                className={`text-xs font-semibold px-3 py-2 rounded-xl transition-all ${
+                  confirmLogout
+                    ? 'bg-red-500 text-white'
+                    : 'bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500'
+                }`}
+              >
+                {confirmLogout ? '¿Confirmar?' : '🚪 Salir'}
+              </button>
             </div>
+
+            {/* Nav mobile */}
             <nav className="flex flex-col gap-1">
               {navItems.map(item => (
                 <NavLink

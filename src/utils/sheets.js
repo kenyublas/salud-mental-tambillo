@@ -1,94 +1,98 @@
-// MEJORADO: URL de API desde variable de entorno; sin fallback hardcodeado
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { authHeaders, logout } from './auth';
 
-// MEJORADO: fetch centralizado con timeout (20s) y verificación de res.ok
-// Antes: cada función silenciaba errores con datos mock → usuario creía haber guardado cuando no
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// Fetch base con token — si recibe 401/403 cierra sesión automáticamente
 async function apiFetch(url, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error || `Error del servidor (${res.status})`);
-    }
-    return await res.json();
-  } catch (err) {
-    clearTimeout(timer);
-    if (err.name === 'AbortError') {
-      throw new Error('La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.');
-    }
-    throw err;
+  const res = await fetch(`${API}${url}`, {
+    ...options,
+    headers: {
+      ...authHeaders(),
+      ...(options.headers || {}),
+    },
+  });
+
+  // Token expirado o inválido → cerrar sesión
+  if (res.status === 401 || res.status === 403) {
+    logout();
+    window.location.reload(); // vuelve al Login automáticamente
+    throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
   }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Error ${res.status}`);
+  }
+
+  return res.json();
 }
 
-// MEJORADO: ya no retorna mock data en producción — lanza el error real
-export async function obtenerRegistros(mes) {
-  return apiFetch(`${API_URL}/api/registros?mes=${encodeURIComponent(mes)}`);
-}
+// ─── RUA (Spreadsheet principal) ──────────────────────────────────────────
 
-// MEJORADO: lanza error real en lugar de simular éxito con mock: true
-export async function crearRegistro(datos) {
-  return apiFetch(`${API_URL}/api/registro`, {
+export const obtenerRegistros = (mes) =>
+  apiFetch(`/api/registros${mes ? `?mes=${encodeURIComponent(mes)}` : ''}`);
+
+export const crearRegistro = (datos) =>
+  apiFetch('/api/registro', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(datos),
   });
-}
 
-// MEJORADO: lanza error real
-export async function editarRegistro(id, datos) {
-  return apiFetch(`${API_URL}/api/registro/${id}`, {
+export const editarRegistro = (fila, datos) =>
+  apiFetch(`/api/registro/${fila}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(datos),
   });
-}
 
-// MEJORADO: acepta `mes` para que el backend elimine de la hoja correcta
-// Antes: no pasaba mes → DELETE siempre operaba sobre el mes actual → borraba fila equivocada
-export async function eliminarRegistro(id, mes) {
-  const params = mes ? `?mes=${encodeURIComponent(mes)}` : '';
-  return apiFetch(`${API_URL}/api/registro/${id}${params}`, {
+export const eliminarRegistro = (fila, mes) =>
+  apiFetch(`/api/registro/${fila}?mes=${encodeURIComponent(mes)}`, {
     method: 'DELETE',
   });
-}
 
-export async function buscarPaciente(dni) {
-  return apiFetch(`${API_URL}/api/paciente/${dni}`).catch(() => null);
-}
+export const buscarPacientes = (q, tipo = 'todos') =>
+  apiFetch(`/api/buscar?q=${encodeURIComponent(q)}&tipo=${tipo}`);
 
-// Búsqueda global en todas las hojas (2025 + 2026)
-// q vacío → devuelve todos los registros de todos los meses
-export async function buscarEnTodos(q = '', tipo = 'todos') {
-  return apiFetch(
-    `${API_URL}/api/buscar?q=${encodeURIComponent(q)}&tipo=${encodeURIComponent(tipo)}`
-  );
-}
+export const listarHojas = () =>
+  apiFetch('/api/listar-hojas');
 
-// ── Utilidad compartida de mes actual ──────────────────────────────────────────
-// MEJORADO: exportada para evitar duplicación en Dashboard, Pacientes, OtrasPaginas
-const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
-  'JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+// ─── DNI AUTOCOMPLETE ─────────────────────────────────────────────────────
+
+export const buscarDNI = (dni) =>
+  apiFetch(`/api/dni/${dni}`);
+
+// ─── SEGUIMIENTO (Spreadsheet 3) ──────────────────────────────────────────
+
+export const obtenerHojasSeguimiento = () =>
+  apiFetch('/api/seguimiento/hojas');
+
+export const obtenerRegistrosSeguimiento = (hoja) =>
+  apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}`);
+
+export const crearRegistroSeguimiento = (hoja, datos) =>
+  apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}`, {
+    method: 'POST',
+    body: JSON.stringify(datos),
+  });
+
+export const editarRegistroSeguimiento = (hoja, fila, datos) =>
+  apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}/${fila}`, {
+    method: 'PUT',
+    body: JSON.stringify(datos),
+  });
+
+export const eliminarRegistroSeguimiento = (hoja, fila) =>
+  apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}/${fila}`, {
+    method: 'DELETE',
+  });
+
+// ─── UTILIDADES ───────────────────────────────────────────────────────────
+export const MESES = [
+  'ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+  'JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'
+];
 
 export function obtenerMesActual() {
-  const now = new Date();
-  const mes = MESES[now.getMonth()];
-  const año = now.getFullYear();
-  return año === 2025 ? mes : `${mes} ${año}`;
+  const anio = new Date().getFullYear();
+  const mes  = MESES[new Date().getMonth()];
+  return anio <= 2025 ? mes : `${mes} ${anio}`;
 }
-
-export { MESES };
-
-// ── DATOS MOCK — solo para referencia de estructura, NO se usa en producción ──
-export const DATOS_MOCK = [
-  {
-    id: 1, fechaAtencion: '03/01/2026', profesional: 'Psicología',
-    tipoAtencion: 'N', nombres: 'Odalia Tolentino Rojas', dni: '72363430',
-    fechaNacimiento: '02/01/1997', edad: '27', sexo: 'F', gestante: '-',
-    hcl: '01-344-07', sector: 'Tambillo', seguro: 'SIS',
-    motivoConsulta: 'Atención integral', tamizaje: '96150.03',
-    resultadoTamizaje: 'Negativo', diagnostico: 'F41.2',
-  },
-];
