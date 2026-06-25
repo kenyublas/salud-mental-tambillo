@@ -119,6 +119,19 @@ function InputField({ campo, value, onChange, busquedaCIE, setBusquedaCIE, mostr
     );
   }
 
+  if (campo.key === 'valoracionRiesgo') {
+    return (
+      <>
+        <input className={base} list="lista-riesgo" value={value}
+          onChange={e => onChange(campo.key, e.target.value)}
+          placeholder="Selecciona o escribe..." autoComplete="off" />
+        <datalist id="lista-riesgo">
+          {['Negativo', 'Leve', 'Moderado', 'Severo'].map(o => <option key={o} value={o} />)}
+        </datalist>
+      </>
+    );
+  }
+
   if (campo.type === 'select') {
     return (
       <select className={base} value={value} onChange={e => onChange(campo.key, e.target.value)}>
@@ -265,7 +278,28 @@ export default function Registro() {
   const esMenor          = parseInt(form.edad) < 18;
   const tamizajePositivo = form.resultadoTamizaje === 'Positivo';
 
-  const set = (key, val) => { setForm(f => ({ ...f, [key]: val })); setFormDirty(true); };
+  const calcularEdad = (fechaNac) => {
+    if (!fechaNac) return '';
+    const nac = new Date(fechaNac);
+    if (isNaN(nac)) return '';
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+    return edad >= 0 ? String(edad) : '';
+  };
+
+  const set = (key, val) => {
+    setForm(f => {
+      const nuevo = { ...f, [key]: val };
+      // Calcular edad automáticamente al cambiar fecha de nacimiento
+      if (key === 'fechaNacimiento') {
+        nuevo.edad = calcularEdad(val);
+      }
+      return nuevo;
+    });
+    setFormDirty(true);
+  };
 
   const handleDNIChange = async (val) => {
     set('dni', val);
@@ -311,14 +345,18 @@ export default function Registro() {
       if (modoEdicion) await editarRegistro(editarId, payload);
       else             await crearRegistro(payload);
       setFormDirty(false); setPendingNavPath(null); setGuardado(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => {
         setGuardado(false);
         if (modoEdicion) navigate('/pacientes');
-        else setForm({
-          fechaAtencion: new Date().toISOString().split('T')[0],
-          profesional: 'Psicología',
-          responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
-        });
+        else {
+          setForm({
+            fechaAtencion: new Date().toISOString().split('T')[0],
+            profesional: 'Psicología',
+            responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
+          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }, 2000);
     } catch (err) {
       setError(err.message || 'Error al guardar.');

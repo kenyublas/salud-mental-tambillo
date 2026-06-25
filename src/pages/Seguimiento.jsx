@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { authHeaders, logout } from '../utils/auth';
 import { descargarPDFSeguimiento, imprimirPDFSeguimiento } from '../utils/pdf';
 
@@ -240,21 +241,17 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
                 Datos adicionales
               </h3>
               <div className="space-y-2">
-{schema.colsMeta.map(c => {
-  const esFecha = c.key === 'proyeccion' || c.key === 'referido' || c.label.toLowerCase().includes('fecha') || c.label.toLowerCase().includes('proyeccion');
-  return (
-    <div key={c.key}>
-      <label className="text-xs font-semibold text-gray-500 mb-1 block">{c.label}</label>
-      <input
-        className="input-field w-full text-sm"
-        type={esFecha ? 'date' : 'text'}
-        value={metaEdit[c.key] || ''}
-        onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))}
-        placeholder={esFecha ? '' : c.label}
-      />
-    </div>
-  );
-})}
+                {schema.colsMeta.map(c => (
+                  <div key={c.key}>
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">{c.label}</label>
+                    <input
+                      className="input-field w-full text-sm"
+                      value={metaEdit[c.key] || ''}
+                      onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))}
+                      placeholder={c.label}
+                    />
+                  </div>
+                ))}
                 <button
                   onClick={guardarMeta}
                   disabled={guardandoMeta}
@@ -512,26 +509,16 @@ function NuevoRegistro({ hojas, onGuardado }) {
               </div>
 
               {/* Campos meta */}
-{/* Campos meta */}
-{schema.colsMeta && schema.colsMeta.length > 0 && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    {schema.colsMeta.map(c => {
-      const esFecha = c.key === 'proyeccion' || c.key === 'referido' || c.key === 'fur' || c.key === 'fpp' || c.label.toLowerCase().includes('fecha') || c.label.toLowerCase().includes('proyeccion');
-      return (
-        <div key={c.key}>
-          <label className="label">{c.label}</label>
-          <input
-            className="input-field w-full"
-            type={esFecha ? 'date' : 'text'}
-            value={form[c.key] || ''}
-            onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))}
-            placeholder={esFecha ? '' : c.label}
-          />
-        </div>
-      );
-    })}
-  </div>
-)}
+              {schema.colsMeta && schema.colsMeta.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {schema.colsMeta.map(c => (
+                    <div key={c.key}>
+                      <label className="label">{c.label}</label>
+                      <input className="input-field w-full" value={form[c.key] || ''} onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))} placeholder={c.label} />
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <button
                 onClick={guardar}
@@ -555,8 +542,33 @@ function NuevoRegistro({ hojas, onGuardado }) {
   );
 }
 
+// ── Paginacion ───────────────────────────────────────────────────────────────
+function Paginacion({ paginaActual, totalPaginas, onChange }) {
+  if (totalPaginas <= 1) return null;
+  const paginas = Array.from({ length: totalPaginas }, (_, i) => i + 1)
+    .filter(p => p === 1 || p === totalPaginas || Math.abs(p - paginaActual) <= 1)
+    .reduce((acc, p, i, arr) => { if (i > 0 && p - arr[i-1] > 1) acc.push('...'); acc.push(p); return acc; }, []);
+  return (
+    <div className="flex items-center justify-center gap-2 mt-4">
+      <button onClick={() => onChange(paginaActual - 1)} disabled={paginaActual === 1}
+        className="w-8 h-8 rounded-xl border border-blue-200 text-blue-500 font-bold text-sm hover:bg-blue-50 disabled:opacity-30">←</button>
+      {paginas.map((p, i) => p === '...' ? (
+        <span key={`d${i}`} className="text-gray-400 text-xs">…</span>
+      ) : (
+        <button key={p} onClick={() => onChange(p)}
+          className={`w-8 h-8 rounded-xl text-sm font-bold ${p === paginaActual ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm' : 'border border-blue-200 text-blue-500 hover:bg-blue-50'}`}>
+          {p}
+        </button>
+      ))}
+      <button onClick={() => onChange(paginaActual + 1)} disabled={paginaActual === totalPaginas}
+        className="w-8 h-8 rounded-xl border border-blue-200 text-blue-500 font-bold text-sm hover:bg-blue-50 disabled:opacity-30">→</button>
+    </div>
+  );
+}
+
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function Seguimiento() {
+  const [searchParams] = useSearchParams();
   const [tab, setTab]         = useState('hojas');
   const [hojas, setHojas]     = useState([]);
   const [loading, setLoading] = useState(true);
@@ -569,6 +581,13 @@ export default function Seguimiento() {
 
   // Hoja seleccionada para ver pacientes
   const [hojaVista, setHojaVista]         = useState(null);
+  const [paginaBuscar, setPaginaBuscar]   = useState(1);
+  const [recientes, setRecientes]         = useState([]);
+  const [loadingRecientes, setLoadingRecientes] = useState(false);
+  const [paginaHoja, setPaginaHoja]       = useState(1);
+  const POR_PAGINA = 10;
+  const paginar = (lista, pagina) => lista.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const totalPags = (lista) => Math.ceil(lista.length / POR_PAGINA);
   const [pacientesHoja, setPacientesHoja] = useState([]);
   const [loadingHoja, setLoadingHoja]     = useState(false);
   const [errorHoja, setErrorHoja]         = useState('');
@@ -579,6 +598,58 @@ export default function Seguimiento() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Cargar últimos 10 pacientes agregados (uno por hoja)
+  useEffect(() => {
+    if (!hojas.length) return;
+    setLoadingRecientes(true);
+    const hojasConSchema = hojas.filter(h => !HOJAS_SOLO_LECTURA.includes(h.nombre));
+    Promise.all(
+      hojasConSchema.map(async h => {
+        try {
+          const [data, schema] = await Promise.all([
+            apiFetch(`/api/seguimiento/${encodeURIComponent(h.nombre)}`),
+            apiFetch(`/api/seguimiento/schema/${encodeURIComponent(h.nombre)}`),
+          ]);
+          if (!schema.tieneSchema) return [];
+          const colNombre = schema.colsFijas?.find(c => c.key === 'nombres')?.col ?? 6;
+          const colDni    = schema.colsFijas?.find(c => c.key === 'dni')?.col    ?? 10;
+          return (data.registros || []).slice(-3).map(reg => ({
+            id:      reg.id,
+            nombres: (reg.valores?.[colNombre] || '').trim(),
+            dni:     (reg.valores?.[colDni]    || '').trim(),
+            hoja:    h.nombre,
+            valores: reg.valores,
+            sesiones: {},
+          })).filter(p => p.nombres || p.dni);
+        } catch { return []; }
+      })
+    ).then(results => {
+      const todos = results.flat()
+        .filter(p => p.nombres)
+        .slice(-10)
+        .reverse();
+      setRecientes(todos);
+    }).finally(() => setLoadingRecientes(false));
+  }, [hojas]);
+
+  // Auto-buscar si viene desde alertas del Dashboard
+  useEffect(() => {
+    const buscarParam = searchParams.get('buscar');
+    if (buscarParam && hojas.length > 0) {
+      setQuery(buscarParam);
+      setTab('buscar');
+      // Auto-ejecutar búsqueda
+      setTimeout(async () => {
+        setBuscando(true); setErrorBuscar(''); setResultados([]);
+        try {
+          const data = await apiFetch(`/api/seguimiento/buscar?q=${encodeURIComponent(buscarParam)}`);
+          setResultados(Array.isArray(data) ? data : []);
+        } catch (e) { setErrorBuscar(e.message); }
+        finally { setBuscando(false); }
+      }, 500);
+    }
+  }, [searchParams, hojas]);
 
   const verPacientesHoja = async (hoja) => {
     setHojaVista(hoja);
@@ -609,7 +680,7 @@ export default function Seguimiento() {
 
   const buscar = async () => {
     if (!query.trim()) return;
-    setBuscando(true); setErrorBuscar(''); setResultados([]);
+    setBuscando(true); setErrorBuscar(''); setResultados([]); setPaginaBuscar(1);
     try {
       const data = await apiFetch(`/api/seguimiento/buscar?q=${encodeURIComponent(query)}`);
       setResultados(Array.isArray(data) ? data : []);
@@ -617,21 +688,21 @@ export default function Seguimiento() {
     finally { setBuscando(false); }
   };
 
-const abrirFicha = async (paciente, hoja) => {
-  setCargandoFicha(true);
-  try {
-    const schema = await apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hoja)}`);
-    // Si el paciente tiene DNI, cargar ficha completa desde el backend
-    let pacienteCompleto = paciente;
-    if (paciente.dni) {
-      try {
-        pacienteCompleto = await apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}/paciente/${paciente.dni}`);
-      } catch {}
-    }
-    setFichaAbierta({ paciente: pacienteCompleto, hoja, schema: schema.tieneSchema ? schema : null });
-  } catch { setFichaAbierta({ paciente, hoja, schema: null }); }
-  finally { setCargandoFicha(false); }
-};
+  const abrirFicha = async (paciente, hoja) => {
+    setCargandoFicha(true);
+    try {
+      const schema = await apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hoja)}`);
+      // Cargar ficha completa si tiene DNI
+      let pacienteCompleto = paciente;
+      if (paciente.dni) {
+        try {
+          pacienteCompleto = await apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}/paciente/${paciente.dni}`);
+        } catch {}
+      }
+      setFichaAbierta({ paciente: pacienteCompleto, hoja, schema: schema.tieneSchema ? schema : null });
+    } catch { setFichaAbierta({ paciente, hoja, schema: null }); }
+    finally { setCargandoFicha(false); }
+  };
 
   const recargarFicha = async () => {
     if (!fichaAbierta) return;
@@ -708,7 +779,7 @@ const abrirFicha = async (paciente, hoja) => {
 
             {!loadingHoja && pacientesHoja.length > 0 && (
               <div className="space-y-2">
-                {pacientesHoja.map((pac, i) => {
+                {paginar(pacientesHoja, paginaHoja).map((pac, i) => {
                   const c = colorHoja(pac.hoja);
                   return (
                     <button key={i} onClick={() => abrirFicha(pac, pac.hoja)} className="card w-full text-left hover:shadow-md transition-all group">
@@ -725,6 +796,7 @@ const abrirFicha = async (paciente, hoja) => {
                     </button>
                   );
                 })}
+                <Paginacion paginaActual={paginaHoja} totalPaginas={totalPags(pacientesHoja)} onChange={p => setPaginaHoja(p)} />
               </div>
             )}
           </div>
@@ -792,10 +864,49 @@ const abrirFicha = async (paciente, hoja) => {
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">⚠️ {errorBuscar}</div>
           )}
 
+          {/* Recientes — solo cuando no hay búsqueda activa */}
+          {!query && !buscando && resultados.length === 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-gray-400 px-1 flex items-center gap-1.5">
+                🕐 Últimos registros agregados
+              </p>
+              {loadingRecientes ? (
+                <div className="flex justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-rosa-200 border-t-rosa-500 rounded-full animate-spin" />
+                </div>
+              ) : recientes.length === 0 ? (
+                <div className="card text-center py-8 text-gray-400">
+                  <p className="text-2xl mb-1">🗂️</p>
+                  <p className="text-xs">Aún no hay pacientes registrados</p>
+                </div>
+              ) : recientes.map((pac, i) => {
+                const c = colorHoja(pac.hoja);
+                return (
+                  <button key={i} onClick={() => abrirFicha(pac, pac.hoja)}
+                    className="card w-full text-left hover:shadow-md transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${c.bg} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                        {(pac.nombres || '?').charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-800 text-sm truncate">{pac.nombres}</p>
+                        <p className="text-xs text-gray-500">{pac.dni}</p>
+                        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 ${c.light} ${c.text}`}>
+                          {pac.hoja}
+                        </span>
+                      </div>
+                      <span className="text-gray-300 group-hover:text-gray-500 text-sm flex-shrink-0">→</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {resultados.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-400 px-1">{resultados.length} resultado(s)</p>
-              {resultados.map((pac, i) => {
+              <p className="text-xs text-gray-400 px-1">{resultados.length} resultado(s) · {POR_PAGINA} por página</p>
+              {paginar(resultados, paginaBuscar).map((pac, i) => {
                 const c = colorHoja(pac.hoja);
                 const totalSes = Object.values(pac.sesiones || {}).reduce((acc, s) => acc + s.completadas, 0);
                 const totalMax = Object.values(pac.sesiones || {}).reduce((acc, s) => acc + s.total, 0);
@@ -818,6 +929,7 @@ const abrirFicha = async (paciente, hoja) => {
                   </button>
                 );
               })}
+              <Paginacion paginaActual={paginaBuscar} totalPaginas={totalPags(resultados)} onChange={p => setPaginaBuscar(p)} />
             </div>
           )}
 

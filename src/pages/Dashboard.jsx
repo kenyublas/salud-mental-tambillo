@@ -227,7 +227,7 @@ function AlertasSeguimiento({ navigate }) {
                   <div
                     key={i}
                     className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 cursor-pointer hover:bg-celeste-50 transition-colors"
-                    onClick={() => navigate('/pacientes')}
+                    onClick={() => navigate(`/pacientes?buscar=${encodeURIComponent(p.dni || p.nombres)}`)}
                   >
                     <div className="w-6 h-6 rounded-full bg-celeste-200 flex items-center justify-center text-xs font-bold text-celeste-700 flex-shrink-0">
                       {(p.nombres?.[0] || '?')}
@@ -257,7 +257,7 @@ function AlertasSeguimiento({ navigate }) {
                   <div
                     key={i}
                     className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 cursor-pointer hover:bg-amber-50 transition-colors"
-                    onClick={() => navigate('/seguimiento')}
+                    onClick={() => navigate(`/seguimiento?buscar=${encodeURIComponent(p.dni || p.nombres)}&hoja=${encodeURIComponent(p.hoja)}`)}
                   >
                     <div className="w-6 h-6 rounded-full bg-amber-200 flex items-center justify-center text-xs font-bold text-amber-700 flex-shrink-0">
                       {(p.nombres?.[0] || '?')}
@@ -292,7 +292,7 @@ function AlertasSeguimiento({ navigate }) {
                   <div
                     key={i}
                     className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 cursor-pointer hover:bg-red-50 transition-colors"
-                    onClick={() => navigate('/seguimiento')}
+                    onClick={() => navigate(`/seguimiento?buscar=${encodeURIComponent(p.dni || p.nombres)}&hoja=${encodeURIComponent(p.hoja)}`)}
                   >
                     <div className="w-6 h-6 rounded-full bg-red-200 flex items-center justify-center text-xs font-bold text-red-700 flex-shrink-0">
                       {(p.nombres?.[0] || '?')}
