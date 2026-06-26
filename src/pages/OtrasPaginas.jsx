@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { obtenerRegistros, buscarPacientes, obtenerMesActual, MESES } from '../utils/sheets';
 import { descargarPDF, imprimirPDF } from '../utils/pdf';
@@ -194,7 +194,7 @@ export function Gestantes() {
                 {/* Datos generales */}
                 <div className="space-y-1">
                   {[
-                    ['Edad', seleccionada.edad ? seleccionada.edad + ' años' : ''],
+                    ['Edad', seleccionada.edad ? seleccionada.edad + ' a\u00f1os' : ''],
                     ['Sector', seleccionada.sector],
                     ['Sectorista', seleccionada.sectorista],
                     ['Celular', seleccionada.celular],

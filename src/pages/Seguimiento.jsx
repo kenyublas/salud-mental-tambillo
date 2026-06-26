@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { authHeaders, logout } from '../utils/auth';
 import { descargarPDFSeguimiento, imprimirPDFSeguimiento } from '../utils/pdf';
@@ -69,8 +69,8 @@ function calcularEdad(fechaNac) {
   if (hoy.getDate() < nac.getDate()) meses--;
   if (meses < 0) { anos--; meses += 12; }
   if (anos === 0) return meses + ' mes' + (meses !== 1 ? 'es' : '');
-  if (meses === 0) return anos + ' años';
-  return anos + ' años ' + meses + ' meses';
+  if (meses === 0) return anos + ' a\u00f1os';
+  return anos + ' a\u00f1os ' + meses + ' meses';
 }
 
 
@@ -151,7 +151,7 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
               </h2>
               <div className="flex items-center gap-3 mt-2 text-sm opacity-90 flex-wrap">
                 <span>🪪 {paciente.dni}</span>
-                <span>· {paciente.edad} años</span>
+                <span>· {paciente.edad} </span>
                 <span>· {paciente.sexo === 'F' ? '♀️' : '♂️'} {paciente.sexo}</span>
               </div>
             </div>
