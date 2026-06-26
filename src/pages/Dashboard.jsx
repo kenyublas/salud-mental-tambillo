@@ -142,7 +142,23 @@ function AlertasSeguimiento({ navigate }) {
         }));
       }
 
-      setAlertas({ citasHoy, proyeccionVencida, sinSesiones30dias });
+      // 3. Gestantes próximas a dar a luz (próximos 30 días)
+      const gestantesProximas = [];
+      const registrosMes = registrosRUA.filter(p => p.gestante === 'G' || p.gestante === 'P');
+      registrosMes.forEach(p => {
+        if (!p.fechaProbableParto) return;
+        const m = p.fechaProbableParto.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (!m) return;
+        const fpp = new Date(`${m[3]}-${m[2]}-${m[1]}`);
+        fpp.setHours(0,0,0,0);
+        const diasRestantes = Math.ceil((fpp - hoy) / (1000 * 60 * 60 * 24));
+        if (diasRestantes >= 0 && diasRestantes <= 30) {
+          gestantesProximas.push({ ...p, diasRestantes });
+        }
+      });
+      gestantesProximas.sort((a, b) => a.diasRestantes - b.diasRestantes);
+
+      setAlertas({ citasHoy, proyeccionVencida, sinSesiones30dias, gestantesProximas });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -201,8 +217,41 @@ function AlertasSeguimiento({ navigate }) {
         </div>
       )}
 
+      {/* Gestantes próximas a dar a luz */}
+      {alertas && alertas.gestantesProximas?.length > 0 && (
+        <div className="rounded-xl border border-purple-200 bg-purple-50 p-3 mt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-base">🤰</span>
+            <p className="font-bold text-purple-700 text-sm">
+              {alertas.gestantesProximas.length} gestante{alertas.gestantesProximas.length > 1 ? 's' : ''} próxima{alertas.gestantesProximas.length > 1 ? 's' : ''} a dar a luz
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            {alertas.gestantesProximas.slice(0, 3).map((p, i) => (
+              <div key={i} className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 cursor-pointer hover:bg-purple-50 transition-colors"
+                onClick={() => navigate('/gestantes')}>
+                <div className="w-6 h-6 rounded-full bg-purple-200 flex items-center justify-center text-xs font-bold text-purple-700 flex-shrink-0">
+                  {(p.nombres?.[0] || '?')}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-gray-700 truncate">{p.nombres}</p>
+                  <p className="text-[10px] text-purple-500">FPP: {p.fechaProbableParto}</p>
+                </div>
+                <span className={`text-[10px] font-bold flex-shrink-0 px-1.5 py-0.5 rounded ${
+                  p.diasRestantes <= 7 ? 'bg-red-100 text-red-700' :
+                  p.diasRestantes <= 14 ? 'bg-amber-100 text-amber-700' :
+                  'bg-purple-100 text-purple-700'
+                }`}>
+                  {p.diasRestantes === 0 ? '¡HOY!' : `${p.diasRestantes}d`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Sin alertas */}
-      {alertas && total === 0 && (
+      {alertas && total === 0 && !alertas.gestantesProximas?.length && (
         <div className="text-center py-6 text-green-600">
           <p className="text-2xl mb-1">✅</p>
           <p className="text-xs font-semibold">Todo al día — sin alertas pendientes</p>

@@ -65,7 +65,7 @@ export const CAMPOS_RUA = [
   { key: 'nombres', label: 'Nombres y Apellidos', type: 'text', required: true },
   { key: 'dni', label: 'DNI', type: 'text', required: true },
   { key: 'fechaNacimiento', label: 'Fecha de Nacimiento', type: 'date', required: true },
-  { key: 'edad', label: 'Edad Actual', type: 'number' },
+  { key: 'edad', label: 'Edad Actual', type: 'text' },
   { key: 'sexo', label: 'Sexo', type: 'select', options: ['F', 'M'], required: true },
   { key: 'gestante', label: 'Gestante/Puérpera', type: 'select', options: ['-', 'G', 'P'] },
   { key: 'fur', label: 'FUR (Fecha Última Regla)', type: 'date', conditionalOn: 'esGestante' },

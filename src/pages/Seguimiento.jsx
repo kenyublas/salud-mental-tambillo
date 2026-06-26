@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { authHeaders, logout } from '../utils/auth';
 import { descargarPDFSeguimiento, imprimirPDFSeguimiento } from '../utils/pdf';
@@ -57,6 +57,23 @@ const HOJA_COLORES = {
 const colorHoja = (nombre) => HOJA_COLORES[nombre] || {
   bg: 'from-gray-500 to-gray-700', light: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200'
 };
+
+// ── Función calcularEdad ──────────────────────────────────────────────────────
+function calcularEdad(fechaNac) {
+  if (!fechaNac) return '';
+  const nac = new Date(fechaNac);
+  if (isNaN(nac)) return '';
+  const hoy = new Date();
+  let anos = hoy.getFullYear() - nac.getFullYear();
+  let meses = hoy.getMonth() - nac.getMonth();
+  if (hoy.getDate() < nac.getDate()) meses--;
+  if (meses < 0) { anos--; meses += 12; }
+  if (anos === 0) return meses + ' mes' + (meses !== 1 ? 'es' : '');
+  if (meses === 0) return anos + ' años';
+  return anos + ' años ' + meses + ' meses';
+}
+
+
 
 // ── Ficha del paciente ────────────────────────────────────────────────────────
 function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMeta, onCerrar }) {
@@ -312,16 +329,24 @@ function NuevoRegistro({ hojas, onGuardado }) {
   const [guardando, setGuardando]         = useState(false);
   const [guardado, setGuardado]           = useState(false);
   const [error, setError]                 = useState('');
+  const [confirmGuardar, setConfirmGuardar] = useState(false);
+  const [formDirty, setFormDirty]           = useState(false);
+  const [mostrarModalSalir, setMostrarModalSalir] = useState(false);
+  const [pendingTab, setPendingTab]         = useState(null);
+  const formRef = useRef(null);
   const col = colorHoja(hojaSeleccionada);
 
   useEffect(() => {
-    if (!hojaSeleccionada) { setSchema(null); setForm({}); setPacienteExistente(null); setDniEstado(''); return; }
+    if (!hojaSeleccionada) { setSchema(null); setForm({}); setPacienteExistente(null); setDniEstado(''); setFormDirty(false); return; }
     apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hojaSeleccionada)}`)
       .then(s => {
         setSchema(s.tieneSchema ? s : null);
         setForm({ psicologo: 'Lic. Janeth Karina Santa Cruz Espiritu', fechaAtencion: new Date().toISOString().split('T')[0] });
         setPacienteExistente(null);
         setDniEstado('');
+        setFormDirty(false);
+        // Scroll al formulario
+        setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
       })
       .catch(() => setSchema(null));
   }, [hojaSeleccionada]);
@@ -342,13 +367,15 @@ function NuevoRegistro({ hojas, onGuardado }) {
       setBuscandoPaciente(false);
     }
 
+    setFormDirty(true);
     setBuscandoDNI(true);
     try {
       const data = await apiFetch(`/api/dni/${val}`);
+      const edadCalculada = calcularEdad(data.fechaNacimiento);
       setForm(f => ({
         ...f,
         nombres:    data.nombres         || f.nombres    || '',
-        edad:       data.edad            || f.edad        || '',
+        edad:       edadCalculada        || data.edad    || f.edad || '',
         sexo:       data.sexo            || f.sexo        || '',
         fechaNac:   data.fechaNacimiento || f.fechaNac    || '',
         sector:     data.sector          || f.sector      || '',
@@ -380,6 +407,7 @@ function NuevoRegistro({ hojas, onGuardado }) {
       });
 
       setGuardado(true);
+      setFormDirty(false);
       setTimeout(() => {
         setGuardado(false);
         setForm({ psicologo: 'Lic. Janeth Karina Santa Cruz Espiritu', fechaAtencion: new Date().toISOString().split('T')[0] });
@@ -414,7 +442,7 @@ function NuevoRegistro({ hojas, onGuardado }) {
       </div>
 
       {hojaSeleccionada && schema && (
-        <div className="card space-y-4">
+        <div ref={formRef} data-form-dirty={formDirty ? 'true' : 'false'} className="card space-y-4">
           <h3 className={`font-bold ${col.text} text-sm`}>{hojaSeleccionada}</h3>
 
           {guardado && (
@@ -488,6 +516,13 @@ function NuevoRegistro({ hojas, onGuardado }) {
                         <input className="input-field w-full" list={`list-${f.key}`} value={form[f.key] || ''} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder="Escribe o selecciona..." />
                         <datalist id={`list-${f.key}`}>{SECTORES.map(s => <option key={s} value={s} />)}</datalist>
                       </>
+                    ) : f.key === 'fechaNac' ? (
+                      <input className="input-field w-full" type="date" value={form[f.key] || ''}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const edad = calcularEdad(val);
+                          setForm(p => ({ ...p, [f.key]: val, ...(edad ? { edad } : {}) }));
+                        }} />
                     ) : (
                       <input className="input-field w-full" type={f.type || 'text'} value={form[f.key] || ''} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.label} />
                     )}
@@ -521,7 +556,11 @@ function NuevoRegistro({ hojas, onGuardado }) {
               )}
 
               <button
-                onClick={guardar}
+                onClick={() => {
+                  if (!form.nombres || !form.dni) { setError('Nombres y DNI son obligatorios.'); return; }
+                  setError('');
+                  setConfirmGuardar(true);
+                }}
                 disabled={guardando}
                 className={`w-full font-bold py-3 rounded-xl bg-gradient-to-r ${col.bg} text-white hover:opacity-90 transition-opacity disabled:opacity-60`}
               >
@@ -536,6 +575,53 @@ function NuevoRegistro({ hojas, onGuardado }) {
         <div className="card text-center py-10 text-gray-400">
           <p className="text-3xl mb-2">👁️</p>
           <p className="text-sm font-semibold">Esta hoja es de solo lectura</p>
+        </div>
+      )}
+
+      {/* Modal confirmar guardar */}
+      {confirmGuardar && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-3xl mx-auto mb-4">💾</div>
+            <h3 className="font-extrabold text-gray-800 text-lg text-center mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              ¿Guardar este registro?
+            </h3>
+            <p className="text-xs text-gray-400 text-center mb-4">Verifica que los datos sean correctos</p>
+            <div className={`${col.light} border ${col.border} rounded-xl px-4 py-3 mb-5 space-y-1.5`}>
+              <div className="flex gap-2"><span className="text-gray-400 text-xs w-20 flex-shrink-0">Paciente</span><span className="font-bold text-gray-800 text-sm">{form.nombres || '—'}</span></div>
+              <div className="flex gap-2"><span className="text-gray-400 text-xs w-20 flex-shrink-0">DNI</span><span className="font-semibold text-gray-700 text-sm">{form.dni || '—'}</span></div>
+              <div className="flex gap-2"><span className="text-gray-400 text-xs w-20 flex-shrink-0">Programa</span><span className={`font-semibold text-sm ${col.text}`}>{hojaSeleccionada}</span></div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmGuardar(false)} className="btn-outline flex-1">Cancelar</button>
+              <button onClick={() => { setConfirmGuardar(false); guardar(); }}
+                className={`flex-1 font-bold py-2 rounded-xl bg-gradient-to-r ${col.bg} text-white hover:opacity-90`}>
+                Sí, guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal salir sin guardar */}
+      {mostrarModalSalir && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-3xl mx-auto mb-4">⚠️</div>
+            <h3 className="font-extrabold text-gray-800 text-lg text-center mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              ¿Seguro que quieres salir?
+            </h3>
+            <p className="text-sm text-gray-500 text-center mb-6">Tienes datos sin guardar. Si sales ahora, perderás la información ingresada.</p>
+            <div className="flex flex-col gap-2.5">
+              <button onClick={() => setMostrarModalSalir(false)} className={`font-bold py-2 rounded-xl bg-gradient-to-r ${col.bg} text-white`}>
+                Quedarme
+              </button>
+              <button onClick={() => { setMostrarModalSalir(false); setFormDirty(false); setHojaSeleccionada(''); setForm({}); if (pendingTab) { /* navegación pendiente */ } setPendingTab(null); }}
+                className="w-full border-2 border-gray-200 text-gray-500 hover:bg-gray-50 font-semibold px-4 py-2 rounded-xl text-sm">
+                Salir de todas formas
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -727,7 +813,16 @@ export default function Seguimiento() {
         {TABS.map(t => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => {
+              // Si está en nuevo registro con datos sin guardar, pedir confirmación
+              if (tab === 'nuevo' && t.key !== 'nuevo') {
+                const hayDatos = document.querySelector('[data-form-dirty="true"]');
+                if (hayDatos) {
+                  if (!window.confirm('Tienes datos sin guardar. ¿Seguro que quieres salir?')) return;
+                }
+              }
+              setTab(t.key);
+            }}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
               tab === t.key ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}

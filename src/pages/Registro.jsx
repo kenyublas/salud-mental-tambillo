@@ -278,17 +278,20 @@ export default function Registro() {
   const esMenor          = parseInt(form.edad) < 18;
   const tamizajePositivo = form.resultadoTamizaje === 'Positivo';
 
-  const calcularEdad = (fechaNac) => {
-    if (!fechaNac) return '';
-    const nac = new Date(fechaNac);
-    if (isNaN(nac)) return '';
-    const hoy = new Date();
-    let edad = hoy.getFullYear() - nac.getFullYear();
-    const m = hoy.getMonth() - nac.getMonth();
-    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
-    return edad >= 0 ? String(edad) : '';
-  };
-
+const calcularEdad = (fechaNac) => {
+  if (!fechaNac) return '';
+  const nac = new Date(fechaNac);
+  if (isNaN(nac.getTime())) return '';
+  const hoy = new Date();
+  let a = hoy.getFullYear() - nac.getFullYear();
+  let m = hoy.getMonth() - nac.getMonth();
+  if (hoy.getDate() < nac.getDate()) m--;
+  if (m < 0) { a--; m += 12; }
+  if (a < 0) return '';
+  if (a === 0) return m + ' meses';
+  if (m === 0) return a + ' a\u00f1os';
+  return a + ' a\u00f1os ' + m + ' meses';
+};
   const set = (key, val) => {
     setForm(f => {
       const nuevo = { ...f, [key]: val };

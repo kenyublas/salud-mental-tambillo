@@ -15,10 +15,13 @@ const calcEdad = (fechaNac) => {
   const nac = new Date(fechaNac);
   if (isNaN(nac.getTime())) return '';
   const hoy = new Date();
-  let e = hoy.getFullYear() - nac.getFullYear();
-  const m = hoy.getMonth() - nac.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) e--;
-  return e + ' anos';
+  let anos = hoy.getFullYear() - nac.getFullYear();
+  let meses = hoy.getMonth() - nac.getMonth();
+  if (hoy.getDate() < nac.getDate()) meses--;
+  if (meses < 0) { anos--; meses += 12; }
+  if (anos === 0) return meses + ' mes' + (meses !== 1 ? 'es' : '');
+  if (meses === 0) return anos + ' a' + String.fromCharCode(241) + 'os';
+  return anos + ' a' + String.fromCharCode(241) + 'os ' + meses + ' mes' + (meses !== 1 ? 'es' : '');
 };
 
 // Carga una imagen desde public/ como data URL. Retorna null si falla.
