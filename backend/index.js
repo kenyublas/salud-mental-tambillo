@@ -329,8 +329,8 @@ app.get('/api/dni/:numero', async (req, res) => {
     console.log(`[GET /api/dni/${dni}] ✅ encontrado en apis.net.pe`);
 
     // decolecta.com devuelve: full_name, first_name, first_last_name, second_last_name
-    const nombreCompleto = apiData.full_name ||
-      `${apiData.first_last_name || ''} ${apiData.second_last_name || ''}, ${apiData.first_name || ''}`.trim();
+const nombreCompleto = apiData.nombre_completo ||
+  `${apiData.apellido_paterno || ''} ${apiData.apellido_materno || ''}, ${apiData.nombres || ''}`.trim();
 
     // decolecta no devuelve fechaNacimiento ni sexo
     const edad    = '';
@@ -1545,7 +1545,7 @@ function colToLetter(col) {
 }
 
 
-// ─── ENDPOINT CLAUDE (Dr. Mind) ───────────────────────────────────────────
+// ─── ENDPOINT CLAUDE (Dr. Umari) ───────────────────────────────────────────
 // POST /api/gemini
 app.post('/api/gemini', async (req, res) => {
   const { mensaje, historial, contexto } = req.body;
@@ -1574,7 +1574,7 @@ app.post('/api/gemini', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 500,
-        system: `Eres Dr. Mind, asistente IA de la Lic. Janeth Karina Santa Cruz Espíritu, psicóloga del Centro de Salud Tambillo-Umari, Huánuco, Perú. Ayúdala con sus pacientes, citas, estadísticas y diagnósticos CIE-10. Responde siempre en español, sé conciso (máximo 3-4 oraciones), usa emojis ocasionalmente. CONTEXTO ACTUAL: ${contexto || 'Sin contexto disponible'}`,
+        system: `Eres Dr. Umari, asistente IA de la Lic. Janeth Karina Santa Cruz Espíritu, psicóloga del Centro de Salud Tambillo-Umari, Huánuco, Perú. Ayúdala con sus pacientes, citas, estadísticas y diagnósticos CIE-10. Responde siempre en español, sé conciso (máximo 3-4 oraciones), usa emojis ocasionalmente. CONTEXTO ACTUAL: ${contexto || 'Sin contexto disponible'}`,
         messages,
       }),
     });
