@@ -6,9 +6,9 @@ import { descargarPDFSeguimiento, imprimirPDFSeguimiento } from '../utils/pdf';
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const SECTORES = [
-  'PINQUIRAY','LA PUNTA','CASA BLANCA','HUANIN','GOYAR PUNTA',
-  'AURAGSHAY','CRUZ PUNTA','TAMBILLO','PANAOCOCHA','SHALLA',
-  'SAN MARCOS','CHACHASPATA','RAMOS CURVA',
+  'PINQUIRAY', 'LA PUNTA', 'CASA BLANCA', 'HUANIN', 'GOYAR PUNTA',
+  'AURAGSHAY', 'CRUZ PUNTA', 'TAMBILLO', 'PANAOCOCHA', 'SHALLA',
+  'SAN MARCOS', 'CHACHASPATA', 'RAMOS CURVA',
 ];
 
 const HOJAS_SOLO_LECTURA = ['TA - 2026', 'Hoja1'];
@@ -24,34 +24,34 @@ async function apiFetch(url, opts = {}) {
 }
 
 const TABS = [
-  { key: 'hojas',  icon: '📋', label: 'Hojas' },
+  { key: 'hojas', icon: '📋', label: 'Hojas' },
   { key: 'buscar', icon: '🔍', label: 'Buscar' },
-  { key: 'nuevo',  icon: '➕', label: 'Nuevo Registro' },
+  { key: 'nuevo', icon: '➕', label: 'Nuevo Registro' },
 ];
 
 const HOJA_COLORES = {
-  'TTO TXS DEPRESIVO':               { bg: 'from-blue-500 to-blue-700',     light: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200'    },
-  'TTO VIF. Y SEXUAL > 18 AÑOS':    { bg: 'from-rose-500 to-rose-700',     light: 'bg-rose-50',    text: 'text-rose-700',    border: 'border-rose-200'    },
-  'TTO VIOL. INFANTIL  0-17 AÑOS':  { bg: 'from-orange-500 to-orange-700', light: 'bg-orange-50',  text: 'text-orange-700',  border: 'border-orange-200'  },
-  'TTO V. SEXUAL DE  0-17 AÑOS':    { bg: 'from-pink-500 to-pink-700',     light: 'bg-pink-50',    text: 'text-pink-700',    border: 'border-pink-200'    },
-  'TTO AUTISMO':                     { bg: 'from-violet-500 to-violet-700', light: 'bg-violet-50',  text: 'text-violet-700',  border: 'border-violet-200'  },
-  'TTO TX MENTAL Y COMP. 0-17 AÑOS':{ bg: 'from-indigo-500 to-indigo-700', light: 'bg-indigo-50',  text: 'text-indigo-700',  border: 'border-indigo-200'  },
-  'TTO TXT CX SUICIDA':              { bg: 'from-red-500 to-red-700',       light: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200'     },
-  'TTO TXT ANSIEDAD':                { bg: 'from-amber-500 to-amber-700',   light: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200'   },
-  'TTO INTERV CONSUMO OH':           { bg: 'from-teal-500 to-teal-700',     light: 'bg-teal-50',    text: 'text-teal-700',    border: 'border-teal-200'    },
-  'TTO DEPENDENCIA OH':              { bg: 'from-cyan-500 to-cyan-700',     light: 'bg-cyan-50',    text: 'text-cyan-700',    border: 'border-cyan-200'    },
-  'TTO ESPECT.ESQUIZOFRENIA EE.SS':  { bg: 'from-purple-500 to-purple-700', light: 'bg-purple-50',  text: 'text-purple-700',  border: 'border-purple-200'  },
-  'VIPOL 1 FORTALECIMIENTO':         { bg: 'from-green-500 to-green-700',   light: 'bg-green-50',   text: 'text-green-700',   border: 'border-green-200'   },
-  'VIPOL 2 ACOMPAÑAMIENTO':          { bg: 'from-emerald-500 to-emerald-700',light:'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  'VIPOL 3 RECONSTRUCCION':          { bg: 'from-lime-500 to-lime-700',     light: 'bg-lime-50',    text: 'text-lime-700',    border: 'border-lime-200'    },
-  'FAMILIAS FUERTES':                { bg: 'from-sky-500 to-sky-700',       light: 'bg-sky-50',     text: 'text-sky-700',     border: 'border-sky-200'     },
-  'SS. HH.SS ADOLESCENTES':          { bg: 'from-fuchsia-500 to-fuchsia-700',light:'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200' },
-  'SS. HH.SS NIÑOS':                 { bg: 'from-rose-400 to-rose-600',     light: 'bg-rose-50',    text: 'text-rose-600',    border: 'border-rose-200'    },
-  'PRIMEROS AUX. PSICOLOGICOS':      { bg: 'from-red-400 to-red-600',       light: 'bg-red-50',     text: 'text-red-600',     border: 'border-red-200'     },
-  'MADRES Y PADRES CUIDADORES':      { bg: 'from-orange-400 to-orange-600', light: 'bg-orange-50',  text: 'text-orange-600',  border: 'border-orange-200'  },
-  'PAREJAS CONSEJERIA':              { bg: 'from-pink-400 to-pink-600',     light: 'bg-pink-50',    text: 'text-pink-600',    border: 'border-pink-200'    },
-  'LIDERES ADOLESCENTES':            { bg: 'from-violet-400 to-violet-600', light: 'bg-violet-50',  text: 'text-violet-600',  border: 'border-violet-200'  },
-  'AGENTES COMUNITARIOS':            { bg: 'from-green-400 to-green-600',   light: 'bg-green-50',   text: 'text-green-600',   border: 'border-green-200'   },
+  'TTO TXS DEPRESIVO': { bg: 'from-blue-500 to-blue-700', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  'TTO VIF. Y SEXUAL > 18 AÑOS': { bg: 'from-rose-500 to-rose-700', light: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+  'TTO VIOL. INFANTIL  0-17 AÑOS': { bg: 'from-orange-500 to-orange-700', light: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+  'TTO V. SEXUAL DE  0-17 AÑOS': { bg: 'from-pink-500 to-pink-700', light: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
+  'TTO AUTISMO': { bg: 'from-violet-500 to-violet-700', light: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+  'TTO TX MENTAL Y COMP. 0-17 AÑOS': { bg: 'from-indigo-500 to-indigo-700', light: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  'TTO TXT CX SUICIDA': { bg: 'from-red-500 to-red-700', light: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+  'TTO TXT ANSIEDAD': { bg: 'from-amber-500 to-amber-700', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  'TTO INTERV CONSUMO OH': { bg: 'from-teal-500 to-teal-700', light: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
+  'TTO DEPENDENCIA OH': { bg: 'from-cyan-500 to-cyan-700', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
+  'TTO ESPECT.ESQUIZOFRENIA EE.SS': { bg: 'from-purple-500 to-purple-700', light: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  'VIPOL 1 FORTALECIMIENTO': { bg: 'from-green-500 to-green-700', light: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+  'VIPOL 2 ACOMPAÑAMIENTO': { bg: 'from-emerald-500 to-emerald-700', light: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  'VIPOL 3 RECONSTRUCCION': { bg: 'from-lime-500 to-lime-700', light: 'bg-lime-50', text: 'text-lime-700', border: 'border-lime-200' },
+  'FAMILIAS FUERTES': { bg: 'from-sky-500 to-sky-700', light: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
+  'SS. HH.SS ADOLESCENTES': { bg: 'from-fuchsia-500 to-fuchsia-700', light: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200' },
+  'SS. HH.SS NIÑOS': { bg: 'from-rose-400 to-rose-600', light: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200' },
+  'PRIMEROS AUX. PSICOLOGICOS': { bg: 'from-red-400 to-red-600', light: 'bg-red-50', text: 'text-red-600', border: 'border-red-200' },
+  'MADRES Y PADRES CUIDADORES': { bg: 'from-orange-400 to-orange-600', light: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
+  'PAREJAS CONSEJERIA': { bg: 'from-pink-400 to-pink-600', light: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200' },
+  'LIDERES ADOLESCENTES': { bg: 'from-violet-400 to-violet-600', light: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+  'AGENTES COMUNITARIOS': { bg: 'from-green-400 to-green-600', light: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
 };
 
 const colorHoja = (nombre) => HOJA_COLORES[nombre] || {
@@ -69,21 +69,21 @@ function calcularEdad(fechaNac) {
   if (hoy.getDate() < nac.getDate()) meses--;
   if (meses < 0) { anos--; meses += 12; }
   if (anos === 0) return meses + ' mes' + (meses !== 1 ? 'es' : '');
-  if (meses === 0) return anos + ' a\u00f1os';
-  return anos + ' a\u00f1os ' + meses + ' meses';
+  if (meses === 0) return anos + ' años';
+  return anos + ' años ' + meses + ' meses';
 }
 
 
 
 // ── Ficha del paciente ────────────────────────────────────────────────────────
 function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMeta, onCerrar }) {
-  const [modalSesion, setModalSesion]     = useState(null);
-  const [fechaSesion, setFechaSesion]     = useState(new Date().toISOString().split('T')[0]);
-  const [guardandoSes, setGuardandoSes]   = useState(false);
-  const [errorSes, setErrorSes]           = useState('');
-  const [metaEdit, setMetaEdit]           = useState({});
+  const [modalSesion, setModalSesion] = useState(null);
+  const [fechaSesion, setFechaSesion] = useState(new Date().toISOString().split('T')[0]);
+  const [guardandoSes, setGuardandoSes] = useState(false);
+  const [errorSes, setErrorSes] = useState('');
+  const [metaEdit, setMetaEdit] = useState({});
   const [guardandoMeta, setGuardandoMeta] = useState(false);
-  const [generandoPDF, setGenerandoPDF]   = useState(false);
+  const [generandoPDF, setGenerandoPDF] = useState(false);
   const col = colorHoja(hoja);
 
   useEffect(() => {
@@ -135,7 +135,7 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
     finally { setGenerandoPDF(false); }
   };
 
-  const numOrdinal = (n) => ['1ra','2da','3ra','4ta','5ta','6ta','7ma','8va','9na','10ma'][n] || `${n+1}ra`;
+  const numOrdinal = (n) => ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va', '9na', '10ma'][n] || `${n + 1}ra`;
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -151,7 +151,7 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
               </h2>
               <div className="flex items-center gap-3 mt-2 text-sm opacity-90 flex-wrap">
                 <span>🪪 {paciente.dni}</span>
-                <span>· {paciente.edad} </span>
+                <span>· {paciente.edad} años</span>
                 <span>· {paciente.sexo === 'F' ? '♀️' : '♂️'} {paciente.sexo}</span>
               </div>
             </div>
@@ -182,13 +182,13 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
           {/* Datos del paciente */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
-              { label: 'Sector',      val: paciente.sector },
-              { label: 'Sectorista',  val: paciente.sectorista },
-              { label: 'Celular',     val: paciente.celular },
-              { label: 'HCL',         val: paciente.hcl },
+              { label: 'Sector', val: paciente.sector },
+              { label: 'Sectorista', val: paciente.sectorista },
+              { label: 'Celular', val: paciente.celular },
+              { label: 'HCL', val: paciente.hcl },
               { label: 'Diagnóstico', val: paciente.diagnostico, full: true },
-              { label: 'Dirección',   val: paciente.direccion,   full: true },
-              { label: 'Apoderado',   val: paciente.apoderado,   full: true },
+              { label: 'Dirección', val: paciente.direccion, full: true },
+              { label: 'Apoderado', val: paciente.apoderado, full: true },
             ].filter(i => i.val).map((item, i) => (
               <div key={i} className={item.full ? 'col-span-2' : ''}>
                 <p className="text-xs text-gray-400 font-semibold">{item.label}</p>
@@ -226,9 +226,8 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
 
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {ses.fechas.map((f, i) => (
-                        <span key={i} className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg ${
-                          f ? `${col.light} ${col.text}` : 'bg-gray-100 text-gray-400'
-                        }`}>
+                        <span key={i} className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg ${f ? `${col.light} ${col.text}` : 'bg-gray-100 text-gray-400'
+                          }`}>
                           {numOrdinal(i)}: {f || '—'}
                         </span>
                       ))}
@@ -236,7 +235,7 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
 
                     {!completo ? (
                       <button
-                        onClick={() => setModalSesion({ grupoKey: grupo.key, label: grupo.label, sesionNum: sigSesion })}
+                        onClick={() => { setFechaSesion(grupo.key === 'fichaRiesgo' ? '' : new Date().toISOString().split('T')[0]); setModalSesion({ grupoKey: grupo.key, label: grupo.label, sesionNum: sigSesion }); }}
                         className={`text-xs font-bold px-3 py-1.5 rounded-lg bg-gradient-to-r ${col.bg} text-white hover:opacity-90 transition-opacity`}
                       >
                         + Agregar {numOrdinal(sigSesion)} sesión
@@ -258,17 +257,28 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
                 Datos adicionales
               </h3>
               <div className="space-y-2">
-                {schema.colsMeta.map(c => (
-                  <div key={c.key}>
-                    <label className="text-xs font-semibold text-gray-500 mb-1 block">{c.label}</label>
-                    <input
-                      className="input-field w-full text-sm"
-                      value={metaEdit[c.key] || ''}
-                      onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))}
-                      placeholder={c.label}
-                    />
-                  </div>
-                ))}
+                {schema.colsMeta.map(c => {
+                  const esCondicion = c.key === 'condicion';
+                  const esFecha = c.key === 'proyeccion' || c.key === 'referido' || c.key === 'fur' || c.key === 'fpp' || c.label.toLowerCase().includes('fecha') || c.label.toLowerCase().includes('proyeccion');
+                  return (
+                    <div key={c.key}>
+                      <label className="text-xs font-semibold text-gray-500 mb-1 block">{c.label}</label>
+                      {esCondicion ? (
+                        <select className="input-field w-full text-sm" value={metaEdit[c.key] || ''} onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))}>
+                          <option value="">-- Seleccionar --</option>
+                          <option value="G">G</option>
+                          <option value="VIPOL">VIPOL</option>
+                          <option value="FED">FED</option>
+                          <option value="VS">VS</option>
+                        </select>
+                      ) : esFecha ? (
+                        <input type="date" className="input-field w-full text-sm" value={metaEdit[c.key] || ''} onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))} />
+                      ) : (
+                        <input className="input-field w-full text-sm" value={metaEdit[c.key] || ''} onChange={e => setMetaEdit(p => ({ ...p, [c.key]: e.target.value }))} placeholder={c.label} />
+                      )}
+                    </div>
+                  );
+                })}
                 <button
                   onClick={guardarMeta}
                   disabled={guardandoMeta}
@@ -290,13 +300,22 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
               {numOrdinal(modalSesion.sesionNum)} sesión
             </h3>
             <p className="text-xs text-gray-500 mb-4 leading-relaxed">{modalSesion.label}</p>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Fecha de la sesión</label>
-            <input
-              type="date"
-              className="input-field w-full mb-4"
-              value={fechaSesion}
-              onChange={e => setFechaSesion(e.target.value)}
-            />
+            {modalSesion?.grupoKey === 'fichaRiesgo' ? (
+              <>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Nivel de riesgo</label>
+                <select className="input-field w-full mb-4" value={fechaSesion} onChange={e => setFechaSesion(e.target.value)}>
+                  <option value="">-- Seleccionar --</option>
+                  <option value="Leve">Leve</option>
+                  <option value="Moderado">Moderado</option>
+                  <option value="Grave">Grave</option>
+                </select>
+              </>
+            ) : (
+              <>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Fecha de la sesion</label>
+                <input type="date" className="input-field w-full mb-4" value={fechaSesion} onChange={e => setFechaSesion(e.target.value)} />
+              </>
+            )}
             {errorSes && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">⚠️ {errorSes}</div>
             )}
@@ -320,19 +339,19 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
 // ── Nuevo Registro ────────────────────────────────────────────────────────────
 function NuevoRegistro({ hojas, onGuardado }) {
   const [hojaSeleccionada, setHojaSeleccionada] = useState('');
-  const [schema, setSchema]               = useState(null);
-  const [form, setForm]                   = useState({});
-  const [buscandoDNI, setBuscandoDNI]     = useState(false);
-  const [dniEstado, setDniEstado]         = useState('');
+  const [schema, setSchema] = useState(null);
+  const [form, setForm] = useState({});
+  const [buscandoDNI, setBuscandoDNI] = useState(false);
+  const [dniEstado, setDniEstado] = useState('');
   const [pacienteExistente, setPacienteExistente] = useState(null);
-  const [buscandoPaciente, setBuscandoPaciente]   = useState(false);
-  const [guardando, setGuardando]         = useState(false);
-  const [guardado, setGuardado]           = useState(false);
-  const [error, setError]                 = useState('');
+  const [buscandoPaciente, setBuscandoPaciente] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [guardado, setGuardado] = useState(false);
+  const [error, setError] = useState('');
   const [confirmGuardar, setConfirmGuardar] = useState(false);
-  const [formDirty, setFormDirty]           = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
   const [mostrarModalSalir, setMostrarModalSalir] = useState(false);
-  const [pendingTab, setPendingTab]         = useState(null);
+  const [pendingTab, setPendingTab] = useState(null);
   const formRef = useRef(null);
   const col = colorHoja(hojaSeleccionada);
 
@@ -363,7 +382,7 @@ function NuevoRegistro({ hojas, onGuardado }) {
         setPacienteExistente(pac);
         setBuscandoPaciente(false);
         return;
-      } catch {}
+      } catch { }
       setBuscandoPaciente(false);
     }
 
@@ -374,16 +393,16 @@ function NuevoRegistro({ hojas, onGuardado }) {
       const edadCalculada = calcularEdad(data.fechaNacimiento);
       setForm(f => ({
         ...f,
-        nombres:    data.nombres         || f.nombres    || '',
-        edad:       edadCalculada        || data.edad    || f.edad || '',
-        sexo:       data.sexo            || f.sexo        || '',
-        fechaNac:   data.fechaNacimiento || f.fechaNac    || '',
-        sector:     data.sector          || f.sector      || '',
-        sectorista: data.sectorista      || f.sectorista  || '',
-        celular:    data.celular         || f.celular     || '',
-        hcl:        data.hcl             || f.hcl         || '',
-        apoderado:  data.apoderado       || f.apoderado   || '',
-        diagnostico:data.diagnostico     || f.diagnostico || '',
+        nombres: data.nombres || f.nombres || '',
+        edad: edadCalculada || data.edad || f.edad || '',
+        sexo: data.sexo || f.sexo || '',
+        fechaNac: data.fechaNacimiento || f.fechaNac || '',
+        sector: data.sector || f.sector || '',
+        sectorista: data.sectorista || f.sectorista || '',
+        celular: data.celular || f.celular || '',
+        hcl: data.hcl || f.hcl || '',
+        apoderado: data.apoderado || f.apoderado || '',
+        diagnostico: data.diagnostico || f.diagnostico || '',
       }));
       setDniEstado(data.fuente === 'sheets' ? 'ok-sheets' : 'ok-api');
     } catch { setDniEstado('no-encontrado'); }
@@ -430,9 +449,8 @@ function NuevoRegistro({ hojas, onGuardado }) {
               <button
                 key={h.id}
                 onClick={() => setHojaSeleccionada(h.nombre)}
-                className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all text-xs font-semibold ${
-                  sel ? `bg-gradient-to-r ${c.bg} text-white border-transparent shadow-md` : `${c.light} ${c.text} ${c.border} hover:shadow-sm`
-                }`}
+                className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all text-xs font-semibold ${sel ? `bg-gradient-to-r ${c.bg} text-white border-transparent shadow-md` : `${c.light} ${c.text} ${c.border} hover:shadow-sm`
+                  }`}
               >
                 {h.nombre}
               </button>
@@ -472,37 +490,37 @@ function NuevoRegistro({ hojas, onGuardado }) {
                     className="input-field w-full pr-10"
                     type="text" inputMode="numeric" maxLength={8}
                     value={form.dni || ''}
-                    onChange={e => handleDNI(e.target.value.replace(/\D/g,''))}
+                    onChange={e => handleDNI(e.target.value.replace(/\D/g, ''))}
                     placeholder="8 dígitos..."
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     {(buscandoDNI || buscandoPaciente) && <div className="w-4 h-4 border-2 border-rosa-300 border-t-rosa-600 rounded-full animate-spin" />}
                     {dniEstado === 'ok-sheets' && <span className="text-green-500 text-sm">✓</span>}
-                    {dniEstado === 'ok-api'    && <span className="text-blue-500 text-sm">✓</span>}
+                    {dniEstado === 'ok-api' && <span className="text-blue-500 text-sm">✓</span>}
                   </div>
                 </div>
-                {dniEstado === 'ok-sheets'     && <p className="text-xs text-green-600 mt-1 font-semibold">✅ Encontrado en registros</p>}
-                {dniEstado === 'ok-api'        && <p className="text-xs text-blue-600 mt-1 font-semibold">🔍 Encontrado en RENIEC</p>}
+                {dniEstado === 'ok-sheets' && <p className="text-xs text-green-600 mt-1 font-semibold">✅ Encontrado en registros</p>}
+                {dniEstado === 'ok-api' && <p className="text-xs text-blue-600 mt-1 font-semibold">🔍 Encontrado en RENIEC</p>}
                 {dniEstado === 'no-encontrado' && <p className="text-xs text-amber-600 mt-1 font-semibold">⚠️ DNI no encontrado — ingresa manualmente</p>}
               </div>
 
               {/* Campos paciente */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  { key: 'nombres',     label: 'Apellidos y Nombres *', full: true },
-                  { key: 'edad',        label: 'Edad' },
-                  { key: 'sexo',        label: 'Sexo', type: 'select', opts: ['M','F'] },
-                  { key: 'fechaNac',    label: 'Fecha de Nacimiento', type: 'date' },
-                  { key: 'hcl',         label: 'Historia Clínica' },
-                  { key: 'sector',      label: 'Sector', type: 'datalist' },
-                  { key: 'sectorista',  label: 'Sectorista' },
-                  { key: 'direccion',   label: 'Dirección' },
-                  { key: 'apoderado',   label: 'Apoderado / Familiar' },
-                  { key: 'celular',     label: 'Celular' },
-                  { key: 'tamizaje',    label: 'Tamizaje' },
+                  { key: 'nombres', label: 'Apellidos y Nombres *', full: true },
+                  { key: 'edad', label: 'Edad' },
+                  { key: 'sexo', label: 'Sexo', type: 'select', opts: ['M', 'F'] },
+                  { key: 'fechaNac', label: 'Fecha de Nacimiento', type: 'date' },
+                  { key: 'hcl', label: 'Historia Clínica' },
+                  { key: 'sector', label: 'Sector', type: 'datalist' },
+                  { key: 'sectorista', label: 'Sectorista' },
+                  { key: 'direccion', label: 'Dirección' },
+                  { key: 'apoderado', label: 'Apoderado / Familiar' },
+                  { key: 'celular', label: 'Celular' },
+                  { key: 'tamizaje', label: 'Tamizaje' },
                   { key: 'diagnostico', label: 'Diagnóstico (CIE-10)' },
                   { key: 'fechaAtencion', label: 'Fecha de Atención', type: 'date' },
-                  { key: 'psicologo',   label: 'Psicólogo(a) Responsable', full: true },
+                  { key: 'psicologo', label: 'Psicólogo(a) Responsable', full: true },
                 ].map(f => (
                   <div key={f.key} className={f.full ? 'sm:col-span-2' : ''}>
                     <label className="label">{f.label}</label>
@@ -532,12 +550,21 @@ function NuevoRegistro({ hojas, onGuardado }) {
 
               {/* Primera sesión de cada grupo */}
               <div>
-                <h4 className={`font-bold ${col.text} text-xs mb-3`}>📅 Primera sesión de cada intervención</h4>
+                <h4 className={`font-bold ${col.text} text-xs mb-3`}>Primera sesion de cada intervencion</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {schema.gruposSesiones?.map(g => (
                     <div key={g.key}>
                       <label className="label text-[10px] leading-tight">{g.label}</label>
-                      <input type="date" className="input-field w-full" value={form[`ses_${g.key}_0`] || ''} onChange={e => setForm(p => ({ ...p, [`ses_${g.key}_0`]: e.target.value }))} />
+                      {g.key === 'fichaRiesgo' ? (
+                        <select className="input-field w-full" value={form[`ses_${g.key}_0`] || ''} onChange={e => setForm(p => ({ ...p, [`ses_${g.key}_0`]: e.target.value }))}>
+                          <option value="">-- Seleccionar --</option>
+                          <option value="Leve">Leve</option>
+                          <option value="Moderado">Moderado</option>
+                          <option value="Grave">Grave</option>
+                        </select>
+                      ) : (
+                        <input type="date" className="input-field w-full" value={form[`ses_${g.key}_0`] || ''} onChange={e => setForm(p => ({ ...p, [`ses_${g.key}_0`]: e.target.value }))} />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -546,12 +573,28 @@ function NuevoRegistro({ hojas, onGuardado }) {
               {/* Campos meta */}
               {schema.colsMeta && schema.colsMeta.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {schema.colsMeta.map(c => (
-                    <div key={c.key}>
-                      <label className="label">{c.label}</label>
-                      <input className="input-field w-full" value={form[c.key] || ''} onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))} placeholder={c.label} />
-                    </div>
-                  ))}
+                  {schema.colsMeta.map(c => {
+                    const esCondicion = c.key === 'condicion';
+                    const esFecha = c.key === 'proyeccion' || c.key === 'referido' || c.key === 'fur' || c.key === 'fpp' || c.label.toLowerCase().includes('fecha') || c.label.toLowerCase().includes('proyeccion');
+                    return (
+                      <div key={c.key}>
+                        <label className="label">{c.label}</label>
+                        {esCondicion ? (
+                          <select className="input-field w-full" value={form[c.key] || ''} onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))}>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="G">G</option>
+                            <option value="VIPOL">VIPOL</option>
+                            <option value="FED">FED</option>
+                            <option value="VS">VS</option>
+                          </select>
+                        ) : esFecha ? (
+                          <input type="date" className="input-field w-full" value={form[c.key] || ''} onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))} />
+                        ) : (
+                          <input className="input-field w-full" value={form[c.key] || ''} onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))} placeholder={c.label} />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -633,7 +676,7 @@ function Paginacion({ paginaActual, totalPaginas, onChange }) {
   if (totalPaginas <= 1) return null;
   const paginas = Array.from({ length: totalPaginas }, (_, i) => i + 1)
     .filter(p => p === 1 || p === totalPaginas || Math.abs(p - paginaActual) <= 1)
-    .reduce((acc, p, i, arr) => { if (i > 0 && p - arr[i-1] > 1) acc.push('...'); acc.push(p); return acc; }, []);
+    .reduce((acc, p, i, arr) => { if (i > 0 && p - arr[i - 1] > 1) acc.push('...'); acc.push(p); return acc; }, []);
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
       <button onClick={() => onChange(paginaActual - 1)} disabled={paginaActual === 1}
@@ -655,33 +698,33 @@ function Paginacion({ paginaActual, totalPaginas, onChange }) {
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function Seguimiento() {
   const [searchParams] = useSearchParams();
-  const [tab, setTab]         = useState('hojas');
-  const [hojas, setHojas]     = useState([]);
+  const [tab, setTab] = useState('hojas');
+  const [hojas, setHojas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery]     = useState('');
-  const [buscando, setBuscando]       = useState(false);
-  const [resultados, setResultados]   = useState([]);
+  const [query, setQuery] = useState('');
+  const [buscando, setBuscando] = useState(false);
+  const [resultados, setResultados] = useState([]);
   const [errorBuscar, setErrorBuscar] = useState('');
-  const [fichaAbierta, setFichaAbierta]   = useState(null);
+  const [fichaAbierta, setFichaAbierta] = useState(null);
   const [cargandoFicha, setCargandoFicha] = useState(false);
 
   // Hoja seleccionada para ver pacientes
-  const [hojaVista, setHojaVista]         = useState(null);
-  const [paginaBuscar, setPaginaBuscar]   = useState(1);
-  const [recientes, setRecientes]         = useState([]);
+  const [hojaVista, setHojaVista] = useState(null);
+  const [paginaBuscar, setPaginaBuscar] = useState(1);
+  const [recientes, setRecientes] = useState([]);
   const [loadingRecientes, setLoadingRecientes] = useState(false);
-  const [paginaHoja, setPaginaHoja]       = useState(1);
+  const [paginaHoja, setPaginaHoja] = useState(1);
   const POR_PAGINA = 10;
   const paginar = (lista, pagina) => lista.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const totalPags = (lista) => Math.ceil(lista.length / POR_PAGINA);
   const [pacientesHoja, setPacientesHoja] = useState([]);
-  const [loadingHoja, setLoadingHoja]     = useState(false);
-  const [errorHoja, setErrorHoja]         = useState('');
+  const [loadingHoja, setLoadingHoja] = useState(false);
+  const [errorHoja, setErrorHoja] = useState('');
 
   useEffect(() => {
     apiFetch('/api/seguimiento/hojas')
       .then(data => setHojas(Array.isArray(data) ? data : []))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -699,12 +742,12 @@ export default function Seguimiento() {
           ]);
           if (!schema.tieneSchema) return [];
           const colNombre = schema.colsFijas?.find(c => c.key === 'nombres')?.col ?? 6;
-          const colDni    = schema.colsFijas?.find(c => c.key === 'dni')?.col    ?? 10;
+          const colDni = schema.colsFijas?.find(c => c.key === 'dni')?.col ?? 10;
           return (data.registros || []).slice(-3).map(reg => ({
-            id:      reg.id,
+            id: reg.id,
             nombres: (reg.valores?.[colNombre] || '').trim(),
-            dni:     (reg.valores?.[colDni]    || '').trim(),
-            hoja:    h.nombre,
+            dni: (reg.valores?.[colDni] || '').trim(),
+            hoja: h.nombre,
             valores: reg.valores,
             sesiones: {},
           })).filter(p => p.nombres || p.dni);
@@ -747,14 +790,14 @@ export default function Seguimiento() {
       const data = await apiFetch(`/api/seguimiento/${encodeURIComponent(hoja.nombre)}`);
       const schema = await apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hoja.nombre)}`);
       const colNombre = schema?.colsFijas?.find(c => c.key === 'nombres')?.col ?? 6;
-      const colDni    = schema?.colsFijas?.find(c => c.key === 'dni')?.col    ?? 10;
+      const colDni = schema?.colsFijas?.find(c => c.key === 'dni')?.col ?? 10;
       const pacs = (data.registros || []).map(reg => {
         const fila = reg.valores || [];
         return {
-          id:      reg.id,
+          id: reg.id,
           nombres: (fila[colNombre] || '').trim(),
-          dni:     (fila[colDni]    || '').trim(),
-          hoja:    hoja.nombre,
+          dni: (fila[colDni] || '').trim(),
+          hoja: hoja.nombre,
           valores: fila,
           sesiones: {},
         };
@@ -783,7 +826,7 @@ export default function Seguimiento() {
       if (paciente.dni) {
         try {
           pacienteCompleto = await apiFetch(`/api/seguimiento/${encodeURIComponent(hoja)}/paciente/${paciente.dni}`);
-        } catch {}
+        } catch { }
       }
       setFichaAbierta({ paciente: pacienteCompleto, hoja, schema: schema.tieneSchema ? schema : null });
     } catch { setFichaAbierta({ paciente, hoja, schema: null }); }
@@ -795,7 +838,7 @@ export default function Seguimiento() {
     try {
       const pac = await apiFetch(`/api/seguimiento/${encodeURIComponent(fichaAbierta.hoja)}/paciente/${fichaAbierta.paciente.dni}`);
       setFichaAbierta(p => ({ ...p, paciente: pac }));
-    } catch {}
+    } catch { }
   };
 
   return (
@@ -823,9 +866,8 @@ export default function Seguimiento() {
               }
               setTab(t.key);
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
-              tab === t.key ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all ${tab === t.key ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
           >
             <span>{t.icon}</span>
             <span className="hidden sm:inline">{t.label}</span>
