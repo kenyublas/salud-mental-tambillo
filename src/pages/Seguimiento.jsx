@@ -175,6 +175,21 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
               🖨️ Imprimir
             </button>
           </div>
+          {/* Encabezado PRODUCTO / ACTIVIDAD / SUBPRODUCTO */}
+{schema?.headerInfo && (
+  <div className="border-b border-gray-100">
+    {[
+      { label: 'PRODUCTO',     val: schema.headerInfo.producto },
+      { label: 'ACTIVIDAD',    val: schema.headerInfo.actividad },
+      { label: 'SUBPRODUCTO',  val: schema.headerInfo.subproducto },
+    ].map(({ label, val }) => (
+      <div key={label} className={`flex gap-2 px-6 py-2 border-l-4 ${col.border} bg-gray-50/60`}>
+        <span className={`text-[10px] font-bold ${col.text} w-24 flex-shrink-0 pt-0.5`}>{label}</span>
+        <span className="text-[10px] text-gray-600 leading-relaxed">{val}</span>
+      </div>
+    ))}
+  </div>
+)}
         </div>
 
         <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">

@@ -9,7 +9,7 @@ import { Gestantes, Referencias, AppsSM } from './pages/OtrasPaginas';
 import Login from './pages/Login';
 import { isLoggedIn, getUsuario, logout } from './utils/auth';
 import CerebroFlotante from './components/CerebroFlotante';
-
+import CEM from './pages/CEM';
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [usuario, setUsuario]   = useState(getUsuario() || '');
@@ -46,6 +46,7 @@ export default function App() {
             <Route path="/gestantes"   element={<Gestantes />} />
             <Route path="/referencias" element={<Referencias />} />
             <Route path="/apps"        element={<AppsSM />} />
+            <Route path="/cem"         element={<CEM />} />
             <Route path="*"            element={<Navigate to="/" replace />} />
           </Routes>
         </main>

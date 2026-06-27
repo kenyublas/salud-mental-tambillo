@@ -353,7 +353,37 @@ export async function generarPDFSeguimiento(paciente, hoja, schema) {
   doc.text(tituloHoja, W / 2, 41.5, { align: 'center' });
 
   let y = 49;
+// ── ENCABEZADO PRODUCTO / ACTIVIDAD / SUBPRODUCTO ──────────────────────
+if (schema?.headerInfo) {
+  const hi = schema.headerInfo;
+  const drawHeaderRow = (label, value) => {
+    // Fondo gris claro para la fila
+    doc.setFillColor(241, 245, 249);
+    doc.rect(M, y - 3.5, W - M * 2, 7, 'F');
+    // Borde izquierdo azul como acento
+    doc.setFillColor(37, 99, 235);
+    doc.rect(M, y - 3.5, 2, 7, 'F');
+    // Label
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(37, 99, 200);
+    doc.text(label + ':', M + 4, y + 0.5);
+    // Valor — con wrap si es largo
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(30, 30, 30);
+    const maxW = W - M * 2 - 28;
+    const lines = doc.splitTextToSize(str(value), maxW);
+    doc.text(lines, M + 28, y + 0.5);
+    y += lines.length > 1 ? 5 + (lines.length - 1) * 3.5 : 7;
+  };
 
+  drawHeaderRow('PRODUCTO',    hi.producto);
+  drawHeaderRow('ACTIVIDAD',   hi.actividad);
+  drawHeaderRow('SUBPRODUCTO', hi.subproducto);
+  y += 3; // espacio antes de los datos del paciente
+}
+// ── FIN ENCABEZADO ──────────────────────────────────────────────────────
   const checkPage = (needed = 15) => {
     if (y + needed > 265) { doc.addPage(); y = M; }
   };

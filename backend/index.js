@@ -696,7 +696,12 @@ app.get('/api/buscar', async (req, res) => {
 
 const SCHEMA_SEGUIMIENTO = {
   'TTO TXS DEPRESIVO': {
-    titulo: 'SEGUIMIENTO DE TRATAMIENTO AMBULATORIO DE PERSONAS CON DEPRESIÓN. (5005190)',
+        titulo: 'SEGUIMIENTO DE TRATAMIENTO AMBULATORIO DE PERSONAS CON DEPRESIÓN. (5005190)',
+    headerInfo: {
+      producto:    'PERSONAS CON TRASTORNOS AFECTIVOS Y DE ANSIEDAD TRATADAS OPORTUNAMENTE',
+      actividad:   'PERSONAS CON TRASTORNOS AFECTIVOS Y DE ANSIEDAD TRATADAS OPORTUNAMENTE (5005190)',
+      subproducto: 'TRATAMIENTO AMBULATORIO DE PERSONAS CON DEPRESION (5005190)',
+    },
     colsFijas: [
       { key: 'producto',       col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',      col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -733,7 +738,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO VIF. Y SEXUAL > 18 AÑOS': {
-    titulo: 'SEGUIMIENTO DE TRATAMIENTO EN VIOLENCIA FAMILIAR (5005189)',
+        titulo: 'SEGUIMIENTO DE TRATAMIENTO EN VIOLENCIA FAMILIAR (5005189)',
+    headerInfo: {
+      producto:    'POBLACION CON PROBLEMAS PSICOSOCIALES QUE RECIBEN ATENCION OPORTUNA Y DE CALIDAD',
+      actividad:   'TRATAMIENTO DE PERSONAS CON PROBLEMAS PSICOSOCIALES (5005189)',
+      subproducto: 'TRATAMIENTO EN VIOLENCIA FAMILIAR EN EL PRIMER NIVEL DE ATENCION NO ESPECIALIZADO (5005189)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -757,7 +767,7 @@ const SCHEMA_SEGUIMIENTO = {
       { key: 'tipoViolencia', col: 19, label: 'TIPO DE VIOLENCIA' },
     ],
     gruposSesiones: [
-      { key: 'fichaRiesgo',            col: 20, sesiones: 3, label: 'APLICACIÓN FICHA VALORACIÓN RIESGOS (99207.06)' },
+      { key: 'fichaRiesgo',            col: 20, sesiones: 1, label: 'APLICACIÓN FICHA VALORACIÓN RIESGOS (99207.06)' },
       { key: 'consultaSaludMental',    col: 23, sesiones: 2, label: 'CONSULTA SALUD MENTAL (99207 - 45 MIN)' },
       { key: 'psicoterapiaIndividual', col: 25, sesiones: 6, label: 'PSICOTERAPIA INDIVIDUAL (90806 - 60 MIN)' },
       { key: 'intervencionFamiliar',   col: 31, sesiones: 1, label: 'INTERVENCIÓN FAMILIAR (C2111.01)' },
@@ -773,7 +783,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO VIOL. INFANTIL  0-17 AÑOS': {
-    titulo: 'SEGUIMIENTO TRATAMIENTO NIÑOS/AS AFECTADOS POR MALTRATO INFANTIL',
+        titulo: 'SEGUIMIENTO TRATAMIENTO NIÑOS/AS AFECTADOS POR MALTRATO INFANTIL',
+    headerInfo: {
+      producto:    'POBLACION CON PROBLEMAS PSICOSOCIALES QUE RECIBEN ATENCION OPORTUNA Y DE CALIDAD',
+      actividad:   'TRATAMIENTO DE PERSONAS CON PROBLEMAS PSICOSOCIALES (5005189)',
+      subproducto: 'TRATAMIENTO DE NINOS, NINAS Y ADOLESCENTES AFECTADOS POR MALTRATO INFANTIL (0060614)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -797,7 +812,7 @@ const SCHEMA_SEGUIMIENTO = {
       { key: 'diagnostico',   col: 19, label: 'DIAGNÓSTICO (CIE-10)' },
     ],
     gruposSesiones: [
-      { key: 'fichaRiesgo',            col: 20, sesiones: 3, label: 'APLICACIÓN FICHA VALORACIÓN RIESGOS (99207.06)' },
+      { key: 'fichaRiesgo',            col: 20, sesiones: 1, label: 'APLICACIÓN FICHA VALORACIÓN RIESGOS (99207.06)' },
       { key: 'consultaSaludMental',    col: 23, sesiones: 2, label: 'CONSULTA SALUD MENTAL (99207 - 45 MIN)' },
       { key: 'intervencionIndividual', col: 25, sesiones: 6, label: 'INTERVENCIÓN INDIVIDUAL / PSICOTERAPIA (99207.01 / 90806)' },
       { key: 'intervencionFamiliar',   col: 31, sesiones: 3, label: 'INTERVENCIÓN FAMILIAR (C2111.01)' },
@@ -815,7 +830,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO V. SEXUAL DE  0-17 AÑOS': {
-    titulo: 'SEGUIMIENTO TRATAMIENTO NIÑOS/AS AFECTADOS POR VIOLENCIA SEXUAL',
+        titulo: 'SEGUIMIENTO TRATAMIENTO NIÑOS/AS AFECTADOS POR VIOLENCIA SEXUAL',
+    headerInfo: {
+      producto:    'POBLACION CON PROBLEMAS PSICOSOCIALES QUE RECIBEN ATENCION OPORTUNA Y DE CALIDAD',
+      actividad:   'TRATAMIENTO DE PERSONAS CON PROBLEMAS PSICOSOCIALES (5005189)',
+      subproducto: 'TRATAMIENTO ESPECIALIZADO DE PERSONAS AFECTADAS POR VIOLENCIA SEXUAL (0060613)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -839,7 +859,7 @@ const SCHEMA_SEGUIMIENTO = {
       { key: 'diagnostico',   col: 19, label: 'DIAGNÓSTICO (CIE-10)' },
     ],
     gruposSesiones: [
-      { key: 'fichaRiesgo',            col: 20, sesiones: 3, label: 'APLICACIÓN FICHA VALORACIÓN RIESGOS (99207.06)' },
+      { key: 'fichaRiesgo',            col: 20, sesiones: 1, label: 'APLICACIÓN FICHA VALORACIÓN RIESGOS (99207.06)' },
       { key: 'consultaSaludMental',    col: 23, sesiones: 2, label: 'CONSULTA SALUD MENTAL (99207 - 45 MIN)' },
       { key: 'intervencionIndividual', col: 25, sesiones: 6, label: 'INTERVENCIÓN INDIVIDUAL / PSICOTERAPIA (99207.01 / 90806)' },
       { key: 'intervencionFamiliar',   col: 31, sesiones: 3, label: 'INTERVENCIÓN FAMILIAR (C2111.01)' },
@@ -855,7 +875,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO AUTISMO': {
-    titulo: 'SEGUIMIENTO TRATAMIENTO AMBULATORIO PERSONAS CON AUTISMO',
+        titulo: 'SEGUIMIENTO TRATAMIENTO AMBULATORIO PERSONAS CON AUTISMO',
+    headerInfo: {
+      producto:    'POBLACION CON PROBLEMAS PSICOSOCIALES QUE RECIBEN ATENCION OPORTUNA Y DE CALIDAD',
+      actividad:   'TRATAMIENTO AMBULATORIO DE NINOS Y NINAS DE 0 A 17 ANOS CON TRASTORNOS MENTALES (5006281)',
+      subproducto: 'TRATAMIENTO AMBULATORIO DE NINOS Y NINAS DE 0 A 17 ANOS CON TRASTORNOS DEL ESPECTRO AUTISTA (0070616)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -894,7 +919,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO TX MENTAL Y COMP. 0-17 AÑOS': {
-    titulo: 'SEGUIMIENTO TRATAMIENTO TRASTORNO MENTAL Y COMPORTAMIENTO 0-17 AÑOS',
+        titulo: 'SEGUIMIENTO TRATAMIENTO TRASTORNO MENTAL Y COMPORTAMIENTO 0-17 AÑOS',
+    headerInfo: {
+      producto:    'POBLACION CON PROBLEMAS PSICOSOCIALES QUE RECIBEN ATENCION OPORTUNA Y DE CALIDAD',
+      actividad:   'TRATAMIENTO AMBULATORIO DE NINOS Y NINAS DE 0 A 17 ANOS CON TRASTORNOS MENTALES (5006281)',
+      subproducto: 'TRATAMIENTO AMBULATORIO DE NINOS Y NINAS DE 0 A 17 ANOS CON TRASTORNOS MENTALES Y/O PROBLEMAS PSICOSOCIALES (5005927)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -933,6 +963,11 @@ const SCHEMA_SEGUIMIENTO = {
 
   'TTO TXT CX SUICIDA': {
     titulo: 'SEGUIMIENTO TRATAMIENTO CONDUCTA SUICIDA',
+    headerInfo: {
+      producto:    'PERSONAS CON TRASTORNOS AFECTIVOS Y DE ANSIEDAD TRATADAS OPORTUNAMENTE',
+      actividad:   'PERSONAS CON TRASTORNOS AFECTIVOS Y DE ANSIEDAD TRATADAS OPORTUNAMENTE (5005190)',
+      subproducto: 'TRATAMIENTO AMBULATORIO DE PERSONAS CON CONDUCTA SUICIDA (0070610)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -972,7 +1007,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO TXT ANSIEDAD': {
-    titulo: 'SEGUIMIENTO TRATAMIENTO TRASTORNO DE ANSIEDAD',
+        titulo: 'SEGUIMIENTO TRATAMIENTO TRASTORNO DE ANSIEDAD',
+    headerInfo: {
+      producto:    'PERSONAS CON TRASTORNOS AFECTIVOS Y DE ANSIEDAD TRATADAS OPORTUNAMENTE',
+      actividad:   'PERSONAS CON TRASTORNOS AFECTIVOS Y DE ANSIEDAD TRATADAS OPORTUNAMENTE (5005190)',
+      subproducto: 'TRATAMIENTO AMBULATORIO DE PERSONAS CON ANSIEDAD (0070611)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -1009,7 +1049,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO INTERV CONSUMO OH': {
-    titulo: 'SEGUIMIENTO INTERVENCIÓN CONSUMO DE ALCOHOL',
+        titulo: 'SEGUIMIENTO INTERVENCIÓN CONSUMO DE ALCOHOL',
+    headerInfo: {
+      producto:    'PERSONAS CON TRASTORNOS MENTALES Y DEL COMPORTAMIENTO DEBIDO AL CONSUMO DEL ALCOHOL TRATADAS OPORTUNAMENTE',
+      actividad:   'PERSONAS CON TRASTORNOS MENTALES Y DEL COMPORTAMIENTO DEBIDO AL CONSUMO DEL ALCOHOL TRATADAS OPORTUNAMENTE (5006282)',
+      subproducto: 'INTERVENCIONES BREVES MOTIVACIONALES PARA PERSONAS CON CONSUMO PERJUDICIAL DEL ALCOHOL Y TABACO (5005192)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -1045,7 +1090,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO DEPENDENCIA OH': {
-    titulo: 'SEGUIMIENTO TRATAMIENTO DEPENDENCIA AL ALCOHOL',
+        titulo: 'SEGUIMIENTO TRATAMIENTO DEPENDENCIA AL ALCOHOL',
+    headerInfo: {
+      producto:    'PERSONAS CON TRASTORNOS MENTALES Y DEL COMPORTAMIENTO DEBIDO AL CONSUMO DEL ALCOHOL TRATADAS OPORTUNAMENTE',
+      actividad:   'PERSONAS CON TRASTORNOS MENTALES Y DEL COMPORTAMIENTO DEBIDO AL CONSUMO DEL ALCOHOL TRATADAS OPORTUNAMENTE (5006282)',
+      subproducto: 'INTERVENCION PARA PERSONAS CON DEPENDENCIA DEL ALCOHOL Y TABACO (0070617)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -1084,7 +1134,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'TTO ESPECT.ESQUIZOFRENIA EE.SS': {
-    titulo: 'SEGUIMIENTO TRATAMIENTO ESPECTRO DE ESQUIZOFRENIA',
+        titulo: 'SEGUIMIENTO TRATAMIENTO ESPECTRO DE ESQUIZOFRENIA',
+    headerInfo: {
+      producto:    'PERSONAS CON TRASTORNOS MENTALES Y SINDROMES PSICOTICOS TRATADAS OPORTUNAMENTE (3000702)',
+      actividad:   'PERSONAS CON TRASTORNOS MENTALES Y DEL COMPORTAMIENTO CON SINDROME PSICOTICO O TRASTORNO ESPECTRO ESQUIZOFRENIA TRATADAS OPORTUNAMENTE',
+      subproducto: 'TRATAMIENTO AMBULATORIO A PERSONAS CON SINDROME PSICOTICO O TRASTORNO DEL ESPECTRO DE LA ESQUIZOFRENIA (5005195)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -1123,7 +1178,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'VIPOL 1 FORTALECIMIENTO': {
-    titulo: 'SEGUIMIENTO VIPOL 1 - FORTALECIMIENTO DE REDES DE APOYO',
+        titulo: 'SEGUIMIENTO VIPOL 1 - FORTALECIMIENTO DE REDES DE APOYO',
+    headerInfo: {
+      producto:    'COMUNIDADES CON POBLACIONES VICTIMAS DE VIOLENCIA POLITICA ATENDIDAS',
+      actividad:   'INTERVENCION COMUNITARIA PARA LA RECUPERACION EMOCIONAL DE POBLACIONES VICTIMAS DE VIOLENCIA POLITICA',
+      subproducto: 'FORTALECIMIENTO DE REDES DE APOYO PSICOSOCIAL (5005199)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -1156,7 +1216,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'VIPOL 2 ACOMPAÑAMIENTO': {
-    titulo: 'SEGUIMIENTO VIPOL 2 - ACOMPAÑAMIENTO PSICOSOCIAL',
+        titulo: 'SEGUIMIENTO VIPOL 2 - ACOMPAÑAMIENTO PSICOSOCIAL',
+    headerInfo: {
+      producto:    'COMUNIDADES CON POBLACIONES VICTIMAS DE VIOLENCIA POLITICA ATENDIDAS',
+      actividad:   'INTERVENCION COMUNITARIA PARA LA RECUPERACION EMOCIONAL DE POBLACIONES VICTIMAS DE VIOLENCIA POLITICA',
+      subproducto: 'ACOMPANAMIENTO PSICOSOCIAL A VICTIMAS DE VIOLENCIA POLITICA (0070625)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -1189,7 +1254,12 @@ const SCHEMA_SEGUIMIENTO = {
   },
 
   'VIPOL 3 RECONSTRUCCION': {
-    titulo: 'SEGUIMIENTO VIPOL 3 - RECONSTRUCCIÓN DE IDENTIDAD COLECTIVA',
+        titulo: 'SEGUIMIENTO VIPOL 3 - RECONSTRUCCIÓN DE IDENTIDAD COLECTIVA',
+    headerInfo: {
+      producto:    'COMUNIDADES CON POBLACIONES VICTIMAS DE VIOLENCIA POLITICA ATENDIDAS',
+      actividad:   'INTERVENCION COMUNITARIA PARA LA RECUPERACION EMOCIONAL DE POBLACIONES VICTIMAS DE VIOLENCIA POLITICA',
+      subproducto: 'RECONSTRUCCION DE LA IDENTIDAD COLECTIVA (0070626)',
+    },
     colsFijas: [
       { key: 'producto',      col: 0,  label: 'PRODUCTO' },
       { key: 'actividad',     col: 1,  label: 'ACTIVIDAD OPERATIVA' },
@@ -1220,6 +1290,32 @@ const SCHEMA_SEGUIMIENTO = {
       { key: 'observacion', col: 27, label: 'OBSERVACIÓN' },
     ],
   },
+  'CEM PACHITEA': {
+  titulo: 'CASOS DEL CENTRO DE EMERGENCIA MUJER - PACHITEA',
+  headerInfo: {
+    producto:    'CENTRO DE EMERGENCIA MUJER - PACHITEA',
+    actividad:   'TERAPIA PSICOLOGICA',
+    subproducto: 'ATENCION Y SEGUIMIENTO DE CASOS CEM',
+  },
+  dataStart: 2, // fila 1=titulo, fila 2=encabezados, fila 3+=datos
+  colsFijas: [
+    { key: 'oficio',         col: 0,  label: 'OFICIO' },
+    { key: 'fechaRecepcion', col: 1,  label: 'FECHA DE RECEPCION' },
+    { key: 'asunto',         col: 2,  label: 'ASUNTO' },
+    { key: 'nombres',        col: 3,  label: 'USUARIA' },
+    { key: 'dni',            col: 4,  label: 'DNI' },
+    { key: 'edad',           col: 5,  label: 'EDAD' },
+    { key: 'comentario',     col: 6,  label: 'COMENTARIO ADICIONAL' },
+    { key: 'nivelRiesgo',    col: 7,  label: 'NIVEL DE RIESGO' },
+    { key: 'domicilio',      col: 8,  label: 'DOMICILIO' },
+    { key: 'celular',        col: 9,  label: 'CELULAR' },
+    { key: 'fechaAtencion',  col: 10, label: 'FECHA DE ATENCION EN CEM' },
+    { key: 'deriva',         col: 11, label: 'DERIVA' },
+    { key: 'observacion',    col: 12, label: 'OBSERVACION' },
+  ],
+  gruposSesiones: [],
+  colsMeta: [],
+},
 };
 
 
@@ -1236,7 +1332,7 @@ async function leerHojaSeguimiento(sheets, hoja) {
 
 function parsearPacientes(allRows, schema) {
   // Fila 1=titulo, 2=subtitulo, 3=encabezados, 4=subencabezados, 5+=datos
-  const DATA_START = 4; // índice base 0 = fila 5 en Excel
+  const DATA_START = schema?.dataStart ?? 4; // índice base 0 = fila 5 en Excel
   if (allRows.length <= DATA_START) return [];
 
   const colDni    = schema?.colsFijas?.find(c => c.key === 'dni')?.col ?? 10;
