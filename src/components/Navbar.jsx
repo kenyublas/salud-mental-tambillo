@@ -109,7 +109,9 @@ export default function Navbar({ usuario, onLogout }) {
                   <img src="/logo-red.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800">{usuario || 'Lic. Janeth'}</p>
+                  <p className="text-xs font-bold text-gray-700">
+  {localStorage.getItem('titulo') || 'Lic.'} {(localStorage.getItem('nombre') || 'Janeth').split(' ')[0]}
+</p>
                   <p className="text-xs text-gray-400">Psicologa - C.S. Tambillo</p>
                 </div>
               </div>

@@ -45,9 +45,14 @@ export default function Login({ onLogin }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al iniciar sesion.');
-      localStorage.setItem('token', data.token);
+
+      // Guardar token y datos del usuario
+      localStorage.setItem('token',   data.token);
       localStorage.setItem('usuario', data.usuario);
-      onLogin(data.token, data.usuario);
+      localStorage.setItem('nombre',  data.nombre);   // ← nuevo
+      localStorage.setItem('titulo',  data.titulo);   // ← nuevo
+
+      onLogin(data.token, data.usuario, data.nombre, data.titulo);
     } catch (err) {
       setError(err.message);
     } finally {

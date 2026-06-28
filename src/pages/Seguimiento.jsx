@@ -375,7 +375,10 @@ function NuevoRegistro({ hojas, onGuardado }) {
     apiFetch(`/api/seguimiento/schema/${encodeURIComponent(hojaSeleccionada)}`)
       .then(s => {
         setSchema(s.tieneSchema ? s : null);
-        setForm({ psicologo: 'Lic. Janeth Karina Santa Cruz Espiritu', fechaAtencion: new Date().toISOString().split('T')[0] });
+        setForm({ 
+  psicologo: `${localStorage.getItem('titulo') || 'Lic.'} ${localStorage.getItem('nombre') || 'Janeth Karina Santa Cruz Espiritu'}`,
+  fechaAtencion: new Date().toISOString().split('T')[0]
+});
         setPacienteExistente(null);
         setDniEstado('');
         setFormDirty(false);

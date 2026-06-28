@@ -199,11 +199,11 @@ export default function Registro() {
   const editarMes   = searchParams.get('mes');
   const modoEdicion = Boolean(editarId && editarMes);
 
-  const [form, setForm] = useState({
-    fechaAtencion: new Date().toISOString().split('T')[0],
-    profesional: 'Psicología',
-    responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
-  });
+const [form, setForm] = useState({
+  fechaAtencion: new Date().toISOString().split('T')[0],
+  profesional: 'Psicología',
+  responsableAtencion: `${localStorage.getItem('titulo') || 'Lic.'} ${localStorage.getItem('nombre') || 'Janeth Karina Santa Cruz Espiritu'}`,
+});
   const [guardando, setGuardando]         = useState(false);
   const [guardado, setGuardado]           = useState(false);
   const [error, setError]                 = useState('');
@@ -353,11 +353,11 @@ const calcularEdad = (fechaNac) => {
         setGuardado(false);
         if (modoEdicion) navigate('/pacientes');
         else {
-          setForm({
-            fechaAtencion: new Date().toISOString().split('T')[0],
-            profesional: 'Psicología',
-            responsableAtencion: 'Lic. Janeth Karina Santa Cruz Espiritu',
-          });
+setForm({
+  fechaAtencion: new Date().toISOString().split('T')[0],
+  profesional: 'Psicología',
+  responsableAtencion: `${localStorage.getItem('titulo') || 'Lic.'} ${localStorage.getItem('nombre') || 'Janeth Karina Santa Cruz Espiritu'}`,
+});
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       }, 2000);

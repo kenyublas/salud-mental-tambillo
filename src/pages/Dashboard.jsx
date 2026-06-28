@@ -525,7 +525,7 @@ export default function Dashboard() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            {obtenerSaludo()}, Lic. Janeth
+            {obtenerSaludo()}, {localStorage.getItem('titulo') || 'Lic.'} {(localStorage.getItem('nombre') || 'Janeth').split(' ')[0]}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
