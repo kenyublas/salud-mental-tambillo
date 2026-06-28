@@ -44,8 +44,6 @@ export default function App() {
             <Route path="/pacientes"   element={<Pacientes />} />
             <Route path="/seguimiento" element={<Seguimiento />} />
             <Route path="/gestantes"   element={<Gestantes />} />
-            <Route path="/referencias" element={<Referencias />} />
-            <Route path="/apps"        element={<AppsSM />} />
             <Route path="/cem"         element={<CEM />} />
             <Route path="*"            element={<Navigate to="/" replace />} />
           </Routes>

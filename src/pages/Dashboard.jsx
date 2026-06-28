@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { obtenerRegistros, obtenerMesActual, MESES } from '../utils/sheets';
 import { authHeaders, logout } from '../utils/auth';
 import jsPDF from 'jspdf';
-
+import MetasVsAvance from '../components/MetasVsAvance';
 const ROSA    = '#ec4899';
 const CELESTE = '#0ea5e9';
 const COLORS  = ['#ec4899', '#0ea5e9', '#a855f7', '#f59e0b', '#10b981', '#ef4444'];
@@ -592,6 +592,7 @@ export default function Dashboard() {
           </div>
 
           <AlertasSeguimiento navigate={navigate} />
+          <MetasVsAvance />
 
           {/* Nuevo paciente */}
           <div className="card mb-6 flex items-center justify-between">

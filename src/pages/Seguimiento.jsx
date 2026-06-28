@@ -175,22 +175,22 @@ function FichaPaciente({ paciente, hoja, schema, onAgregarSesion, onActualizarMe
               🖨️ Imprimir
             </button>
           </div>
-          {/* Encabezado PRODUCTO / ACTIVIDAD / SUBPRODUCTO */}
-{schema?.headerInfo && (
-  <div className="border-b border-gray-100">
-    {[
-      { label: 'PRODUCTO',     val: schema.headerInfo.producto },
-      { label: 'ACTIVIDAD',    val: schema.headerInfo.actividad },
-      { label: 'SUBPRODUCTO',  val: schema.headerInfo.subproducto },
-    ].map(({ label, val }) => (
-      <div key={label} className={`flex gap-2 px-6 py-2 border-l-4 ${col.border} bg-gray-50/60`}>
-        <span className={`text-[10px] font-bold ${col.text} w-24 flex-shrink-0 pt-0.5`}>{label}</span>
-        <span className="text-[10px] text-gray-600 leading-relaxed">{val}</span>
-      </div>
-    ))}
-  </div>
-)}
         </div>
+          {/* Encabezado PRODUCTO / ACTIVIDAD / SUBPRODUCTO */}
+        {schema?.headerInfo && (
+          <div className="border-b border-gray-100">
+            {[
+              { label: 'PRODUCTO',    val: schema.headerInfo.producto },
+              { label: 'ACTIVIDAD',   val: schema.headerInfo.actividad },
+              { label: 'SUBPRODUCTO', val: schema.headerInfo.subproducto },
+            ].map(({ label, val }) => (
+              <div key={label} className={`flex gap-2 px-6 py-2 border-l-4 ${col.border} bg-gray-50/60`}>
+                <span className={`text-[10px] font-bold ${col.text} w-24 flex-shrink-0 pt-0.5`}>{label}</span>
+                <span className="text-[10px] text-gray-600 leading-relaxed">{val}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
 
@@ -958,17 +958,7 @@ export default function Seguimiento() {
         ) : (
           // ── Lista de hojas ─────────────────────────────────────────────
           <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {hojas.filter(h => HOJAS_SOLO_LECTURA.includes(h.nombre)).map(h => (
-                <div key={h.id} className="card flex items-center gap-3 opacity-60">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg">📊</div>
-                  <div>
-                    <p className="font-bold text-gray-700 text-sm">{h.nombre}</p>
-                    <p className="text-xs text-gray-400">Solo lectura — Programación</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {hojas.filter(h => !HOJAS_SOLO_LECTURA.includes(h.nombre)).map(h => {
                 const c = colorHoja(h.nombre);

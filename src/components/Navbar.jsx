@@ -19,9 +19,7 @@ const navItems = [
   { path: '/registro',    label: 'Nuevo Registro', icon: <IconEdit /> },
   { path: '/pacientes',   label: 'Pacientes',      icon: <IconUsers /> },
   { path: '/gestantes',   label: 'Gestantes',      icon: <IconHeart /> },
-  { path: '/referencias', label: 'Referencias',    icon: <IconClipboard /> },
   { path: '/seguimiento', label: 'Seguimiento',    icon: <IconFolder /> },
-  { path: '/apps',        label: 'APPs SM',        icon: <IconHospital /> },
   { path: '/cem',         label: 'CEM',            icon: <IconShield /> },
 ];
 
