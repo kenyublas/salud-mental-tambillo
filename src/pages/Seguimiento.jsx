@@ -11,7 +11,7 @@ const SECTORES = [
   'SAN MARCOS', 'CHACHASPATA', 'RAMOS CURVA',
 ];
 
-const HOJAS_SOLO_LECTURA = ['TA - 2026', 'Hoja1'];
+const HOJAS_SOLO_LECTURA = ['TA - 2026', 'Hoja1', 'CEM PACHITEA'];
 
 async function apiFetch(url, opts = {}) {
   const res = await fetch(`${API}${url}`, {
