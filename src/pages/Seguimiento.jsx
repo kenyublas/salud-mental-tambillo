@@ -1,9 +1,7 @@
 ﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { authHeaders, logout } from '../utils/auth';
 import { descargarPDFSeguimiento, imprimirPDFSeguimiento } from '../utils/pdf';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import apiFetch from '../utils/api';
 
 const SECTORES = [
   'PINQUIRAY', 'LA PUNTA', 'CASA BLANCA', 'HUANIN', 'GOYAR PUNTA',
@@ -12,16 +10,6 @@ const SECTORES = [
 ];
 
 const HOJAS_SOLO_LECTURA = ['TA - 2026', 'Hoja1', 'CEM PACHITEA'];
-
-async function apiFetch(url, opts = {}) {
-  const res = await fetch(`${API}${url}`, {
-    ...opts,
-    headers: { ...authHeaders(), ...(opts.headers || {}) },
-  });
-  if (res.status === 401 || res.status === 403) { logout(); window.location.reload(); }
-  if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || `Error ${res.status}`); }
-  return res.json();
-}
 
 const TABS = [
   { key: 'hojas', icon: '📋', label: 'Hojas' },

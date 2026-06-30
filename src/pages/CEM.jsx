@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { authHeaders, logout } from '../utils/auth';
 import jsPDF from 'jspdf';
+import apiFetch from '../utils/api';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const HOJA = 'CEM PACHITEA';
 const POR_PAGINA = 10;
-
-async function apiFetch(url, opts = {}) {
-  const res = await fetch(`${API}${url}`, {
-    ...opts,
-    headers: { ...authHeaders(), ...(opts.headers || {}) },
-  });
-  if (res.status === 401 || res.status === 403) { logout(); window.location.reload(); }
-  if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || `Error ${res.status}`); }
-  return res.json();
-}
 
 const NIVELES_RIESGO = ['LEVE', 'MODERADO', 'GRAVE'];
 

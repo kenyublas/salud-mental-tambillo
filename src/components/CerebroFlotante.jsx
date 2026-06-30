@@ -1,18 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { authHeaders, logout } from '../utils/auth';
 import { obtenerRegistros, obtenerMesActual } from '../utils/sheets';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-async function apiFetch(url, opts = {}) {
-  const res = await fetch(`${API}${url}`, {
-    ...opts,
-    headers: { ...authHeaders(), ...(opts.headers || {}) },
-  });
-  if (res.status === 401 || res.status === 403) { logout(); window.location.reload(); }
-  if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || `Error ${res.status}`); }
-  return res.json();
-}
+import apiFetch from '../utils/api';
 
 const NOMBRE_ASISTENTE = 'Dr. Umari';
 
