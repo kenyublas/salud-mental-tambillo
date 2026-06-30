@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { obtenerRegistros, obtenerMesActual } from '../utils/sheets';
 import apiFetch from '../utils/api';
 
 const NOMBRE_ASISTENTE = 'Dr. Umari';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 function CerebroIcon({ activo, hablando }) {
   return (
@@ -62,11 +64,23 @@ function CerebroIcon({ activo, hablando }) {
   );
 }
 
+// Nombres legibles de cada ruta (debe coincidir con backend/routes/cem.js → PAGINAS)
+const NOMBRES_PAGINA = {
+  '/':            'Dashboard',
+  '/registro':    'Nuevo Registro',
+  '/pacientes':   'Pacientes',
+  '/gestantes':   'Gestantes',
+  '/seguimiento': 'Seguimiento',
+  '/cem':         'CEM Pachitea',
+};
+
 // SVG Icons
-const IconMic     = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>;
-const IconSend    = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>;
-const IconTrash   = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>;
-const IconClose   = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>;
+const IconMic       = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>;
+const IconSend      = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>;
+const IconTrash     = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>;
+const IconClose     = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>;
+const IconSpeaker   = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>;
+const IconSpeakerOff= () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14L9.586 6.586M17 14l-7.414 7.414M17 14H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 2.663 12 3.109 12 4v3"/></svg>;
 
 function Burbuja({ msg }) {
   const esUser = msg.rol === 'user';
@@ -91,6 +105,7 @@ function Burbuja({ msg }) {
 }
 
 export default function CerebroFlotante() {
+  const location = useLocation();
   const [abierto, setAbierto]       = useState(false);
   const [historial, setHistorial]   = useState([]);
   const [input, setInput]           = useState('');
@@ -98,9 +113,19 @@ export default function CerebroFlotante() {
   const [contexto, setContexto]     = useState('');
   const [escuchando, setEscuchando] = useState(false);
   const [saludado, setSaludado]     = useState(false);
+  const [audioActivo, setAudioActivo] = useState(false); // apagado por defecto
+  const [reproduciendo, setReproduciendo] = useState(false);
   const chatRef  = useRef(null);
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
+  const audioRef = useRef(null);
+
+  const nombrePsicologa = localStorage.getItem('nombre') || 'Janeth Karina Santa Cruz Espiritu';
+  const tituloPsicologa = localStorage.getItem('titulo') || 'Lic.';
+  const nombreCorto = `${tituloPsicologa} ${nombrePsicologa.split(' ')[0]}`;
+
+  const paginaActual = location.pathname;
+  const nombrePaginaActual = NOMBRES_PAGINA[paginaActual] || paginaActual;
 
   useEffect(() => {
     const cargarContexto = async () => {
@@ -130,15 +155,32 @@ Ultimos pacientes: ${registros.slice(0, 3).map(p => p.nombres).filter(Boolean).j
   }, []);
 
   useEffect(() => {
-    if (abierto && !saludado && contexto) {
-      setSaludado(true);
-      enviarMensaje('Hola, dame un resumen del dia', true);
-    }
-  }, [abierto, saludado, contexto]);
-
-  useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [historial, cargando]);
+
+  const reproducirAudio = useCallback(async (texto) => {
+    if (!audioActivo) return;
+    try {
+      setReproduciendo(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/api/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ texto }),
+      });
+      if (!res.ok) throw new Error('No se pudo generar el audio');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (audioRef.current) { audioRef.current.pause(); }
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setReproduciendo(false);
+      audio.onerror = () => setReproduciendo(false);
+      await audio.play();
+    } catch {
+      setReproduciendo(false);
+    }
+  }, [audioActivo]);
 
   const enviarMensaje = useCallback(async (texto, esAutomatico = false) => {
     if (!texto.trim() || cargando) return;
@@ -149,20 +191,24 @@ Ultimos pacientes: ${registros.slice(0, 3).map(p => p.nombres).filter(Boolean).j
       const historialEnviar = esAutomatico ? [] : historial;
       const data = await apiFetch('/api/gemini', {
         method: 'POST',
-        body: JSON.stringify({ mensaje: texto.trim(), historial: historialEnviar, contexto }),
+        body: JSON.stringify({
+          mensaje: texto.trim(),
+          historial: historialEnviar,
+          contexto,
+          nombreUsuario: nombrePsicologa,
+          tituloUsuario: tituloPsicologa,
+          paginaActual,
+        }),
       });
       const msgBot = { rol: 'assistant', texto: data.respuesta };
       if (esAutomatico) setHistorial([msgBot]);
       else setHistorial(h => [...h, msgBot]);
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(data.respuesta);
-        utterance.lang = 'es-PE'; utterance.rate = 1.1; utterance.pitch = 1;
-        window.speechSynthesis.speak(utterance);
-      }
+
+      reproducirAudio(data.respuesta);
     } catch (e) {
       setHistorial(h => [...h, { rol: 'assistant', texto: `Lo siento, hubo un error: ${e.message}` }]);
     } finally { setCargando(false); }
-  }, [historial, contexto, cargando]);
+  }, [historial, contexto, cargando, nombrePsicologa, tituloPsicologa, paginaActual, reproducirAudio]);
 
   const toggleVoz = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -179,6 +225,14 @@ Ultimos pacientes: ${registros.slice(0, 3).map(p => p.nombres).filter(Boolean).j
     recognition.start(); setEscuchando(true);
   };
 
+  const toggleAudio = () => {
+    if (audioActivo && audioRef.current) {
+      audioRef.current.pause();
+      setReproduciendo(false);
+    }
+    setAudioActivo(a => !a);
+  };
+
   const handleKey = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje(input); }
   };
@@ -192,13 +246,20 @@ Ultimos pacientes: ${registros.slice(0, 3).map(p => p.nombres).filter(Boolean).j
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8"><CerebroIcon activo={true} hablando={cargando} /></div>
+              <div className="w-8 h-8"><CerebroIcon activo={true} hablando={cargando || reproduciendo} /></div>
               <div>
                 <p className="font-bold text-white text-sm" style={{ fontFamily: 'Poppins, sans-serif' }}>{NOMBRE_ASISTENTE}</p>
-                <p className="text-xs text-purple-200">{cargando ? 'Pensando...' : 'Asistente IA'}</p>
+                <p className="text-xs text-purple-200">
+                  {cargando ? 'Pensando...' : reproduciendo ? 'Hablando...' : `En ${nombrePaginaActual}`}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <button onClick={toggleAudio}
+                className={`p-1.5 rounded-lg transition-colors ${audioActivo ? 'bg-white/25 text-white' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                title={audioActivo ? 'Desactivar voz' : 'Activar voz'}>
+                {audioActivo ? <IconSpeaker /> : <IconSpeakerOff />}
+              </button>
               <button onClick={() => setHistorial([])}
                 className="text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="Limpiar chat">
                 <IconTrash />
@@ -215,8 +276,8 @@ Ultimos pacientes: ${registros.slice(0, 3).map(p => p.nombres).filter(Boolean).j
             {historial.length === 0 && !cargando && (
               <div className="text-center text-gray-400 py-8">
                 <div className="w-16 h-16 mx-auto mb-3"><CerebroIcon activo={false} hablando={false} /></div>
-                <p className="text-xs font-semibold">Hola Lic. Janeth</p>
-                <p className="text-xs mt-1">Puedes preguntarme sobre tus pacientes, citas o estadisticas</p>
+                <p className="text-xs font-semibold">Hola, {nombreCorto}</p>
+                <p className="text-xs mt-1">Esta en {nombrePaginaActual}. Puede preguntarme sobre sus pacientes, citas, estadisticas o que es esta pagina.</p>
               </div>
             )}
             {historial.map((msg, i) => <Burbuja key={i} msg={msg} />)}
@@ -240,9 +301,9 @@ Ultimos pacientes: ${registros.slice(0, 3).map(p => p.nombres).filter(Boolean).j
           </div>
 
           {/* Sugerencias */}
-          {historial.length <= 1 && !cargando && (
+          {historial.length === 0 && !cargando && (
             <div className="px-3 py-2 flex gap-1.5 flex-wrap border-t border-gray-100">
-              {['Pacientes hoy', 'Citas pendientes', 'Resumen del mes'].map(s => (
+              {['Que pagina es esta', 'Pacientes hoy', 'Resumen del mes'].map(s => (
                 <button key={s} onClick={() => enviarMensaje(s)}
                   className="text-[10px] font-semibold bg-purple-50 text-purple-600 hover:bg-purple-100 px-2.5 py-1 rounded-full transition-colors">
                   {s}
@@ -280,7 +341,7 @@ Ultimos pacientes: ${registros.slice(0, 3).map(p => p.nombres).filter(Boolean).j
         }}
         title={`${NOMBRE_ASISTENTE} — Asistente IA`}>
         <div className="w-full h-full p-2">
-          <CerebroIcon activo={abierto} hablando={cargando} />
+          <CerebroIcon activo={abierto} hablando={cargando || reproduciendo} />
         </div>
       </button>
 
