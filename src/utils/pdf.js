@@ -14,13 +14,21 @@ const str = (val) => {
 const strEdad = (val) => {
   if (!val) return '—';
   return String(val)
+    .replace(/\\u00f1/g, String.fromCharCode(241))  // convierte \u00f1 literal
     .replace(/ñ/g, String.fromCharCode(241))
     .replace(/anos/g, 'a' + String.fromCharCode(241) + 'os');
 };
 
 const calcEdad = (fechaNac) => {
   if (!fechaNac) return '';
-  const nac = new Date(fechaNac);
+  let nac;
+  // Soporta formato DD/MM/YYYY (peruano) y YYYY-MM-DD
+  if (typeof fechaNac === 'string' && fechaNac.includes('/')) {
+    const [d, m, a] = fechaNac.split('/');
+    nac = new Date(`${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`);
+  } else {
+    nac = new Date(fechaNac);
+  }
   if (isNaN(nac.getTime())) return '';
   const hoy = new Date();
   let anos = hoy.getFullYear() - nac.getFullYear();

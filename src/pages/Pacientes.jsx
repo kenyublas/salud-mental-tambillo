@@ -139,7 +139,7 @@ export default function Pacientes() {
         </div>
         <div className="space-y-2 overflow-y-auto max-h-[50vh] pr-1">
           <Seccion titulo="Datos de Atención" campos={[['Fecha Atención', p.fechaAtencion],['Tipo', tipo],['Responsable', p.responsableAtencion]]} />
-          <Seccion titulo="Datos del Paciente" campos={[['Nombres', p.nombres],['DNI', p.dni],['Fecha Nac.', p.fechaNacimiento],['Edad', p.edad ? p.edad + ' a\u00f1os' : ''],['Sexo', p.sexo === 'F' ? 'Femenino' : p.sexo === 'M' ? 'Masculino' : p.sexo],['Apoderado', p.apoderado]]} />
+          <Seccion titulo="Datos del Paciente" campos={[['Nombres', p.nombres],['DNI', p.dni],['Fecha Nac.', p.fechaNacimiento],['Edad', p.edad || ''],['Sexo', p.sexo === 'F' ? 'Femenino' : p.sexo === 'M' ? 'Masculino' : p.sexo],['Apoderado', p.apoderado]]} />
           {(p.gestante === 'G' || p.gestante === 'P') && <Seccion titulo="Gestante / Puérpera" campos={[['Estado', p.gestante === 'G' ? 'Gestante' : 'Puérpera'],['FUR', p.fur],['Sem. Gestacional', p.semanaGestacional],['F. Probable Parto', p.fechaProbableParto]]} />}
           <Seccion titulo="Ubicación" campos={[['H.CL', p.hcl],['Sector', p.sector],['Sectorista', p.sectorista],['Seguro', p.seguro],['Celular', p.celular]]} />
           <Seccion titulo="Consulta y Diagnóstico" campos={[['Motivo', p.motivoConsulta],['Tamizaje', p.tamizaje ? <div className="flex flex-wrap gap-1">{p.tamizaje.split(',').map(s => s.trim()).filter(Boolean).map(c => <span key={c} className="bg-rosa-100 text-rosa-700 text-[9px] font-bold px-2 py-0.5 rounded-full">{c}</span>)}</div> : null],['Resultado', p.resultadoTamizaje],['Diagnóstico', p.diagnostico]]} />
@@ -162,7 +162,7 @@ export default function Pacientes() {
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rosa-200 to-celeste-200 flex items-center justify-center text-rosa-700 font-bold flex-shrink-0">{p.nombres?.[0] || '?'}</div>
         <div className="flex-1 min-w-0">
           <p className="font-bold text-gray-800 text-sm truncate">{p.nombres}</p>
-          <p className="text-xs text-gray-400">DNI: {p.dni} · {p.edad} a\u00f1os · {p.sector}</p>
+          <p className="text-xs text-gray-400">DNI: {p.dni} · {p.edad} · {p.sector}</p>
           <p className="text-xs text-gray-400">{p.fechaAtencion}</p>
           {p.mes && <span className="inline-block text-[10px] bg-rosa-100 text-rosa-700 font-bold px-2 py-0.5 rounded-full mt-0.5">{p.mes}</span>}
         </div>
